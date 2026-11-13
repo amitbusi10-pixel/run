@@ -496,6 +496,8 @@ function renderRun() {
   $('#vSteps').textContent = fmtInt(stepCount());
   $('#vCad').textContent = cadence();
   $('#vCal').textContent = Math.round(S.weight * (R.dist / 1000) * 1.036);
+  $('#mTime').textContent = fmtClock(R.elapsed);
+  $('#mDist').textContent = fmtKm(R.dist);
 
   // קטעי אימון
   const c = R.context, segBox = $('#segment');
@@ -515,6 +517,12 @@ function renderRun() {
       $('#segLeft').textContent = '✓';
     }
   } else segBox.hidden = true;
+  const mSeg = $('#mSeg');
+  mSeg.hidden = segBox.hidden;
+  if (!segBox.hidden) {
+    mSeg.dataset.kind = segBox.dataset.kind;
+    mSeg.textContent = `${$('#segName').textContent} · ${$('#segLeft').textContent}`;
+  }
 
   // מאמן קצב
   const coach = $('#coach'), tp = targetPace();
@@ -1167,6 +1175,19 @@ $('#btnPause').onclick = pauseRun;
 $('#btnResume').onclick = resumeRun;
 $('#btnStop').onclick = stopRun;
 $('#btnFollow').onclick = () => setFollow(!follow);
+// מפה במסך מלא: מסתיר את לוח הנתונים והתפריט, ומשאיר תיבה קטנה עם זמן ומרחק
+function setFullMap(on) {
+  document.body.classList.toggle('fullmap', on);
+  $('#btnFull').title = on ? 'חזרה לתצוגה הרגילה' : 'מפה במסך מלא';
+  $('#btnFull').setAttribute('aria-label', $('#btnFull').title);
+  $('#fullIcon').setAttribute('d', on
+    ? 'M9 4v5H4V7h3V4zm6 0h2v3h3v2h-5zM4 15h5v5H7v-3H4zm11 0h5v2h-3v3h-2z'
+    : 'M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 0h2v5h-5v-2h3z');
+  LS.set('fullmap', on);
+  setTimeout(() => { map.invalidateSize(); if (follow && lastPos) map.panTo(lastPos, { animate: false }); }, 60);
+}
+$('#btnFull').onclick = () => setFullMap(!document.body.classList.contains('fullmap'));
+$('#mini').onclick = () => setFullMap(false);
 $('#btnLayer').onclick = () => {
   const order = ['voyager', 'dark', 'sat'];
   const next = order[(order.indexOf(currentLayerKey) + 1) % order.length];
@@ -1183,6 +1204,7 @@ document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => sho
   window.addEventListener('devicemotion', onMotion);
   startGps();
   restoreActive();
+  if (LS.get('fullmap', false)) setFullMap(true);
   renderControls(); renderContext(); renderRun();
   tickTimer = setInterval(tick, 250);
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
