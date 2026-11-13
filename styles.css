@@ -286,6 +286,29 @@ textarea { width: 100%; background: var(--surface-2); border: 1px solid var(--li
 .me-arrow path { fill: #2f8cff; stroke: #fff; stroke-width: 2; stroke-linejoin: round; }
 .ghost-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--plum); border: 2px solid #fff; color: #fff; font-size: 7px; font-weight: 700; display: grid; place-items: center; }
 
+/* ---------- מפה במסך מלא ---------- */
+.mbtn svg { width: 22px; height: 22px; fill: currentColor; display: block; margin: auto; }
+.mini { display: none; }
+body.fullmap .panel, body.fullmap .tabs { display: none; }
+body.fullmap .map-wrap { flex: 1 1 auto; }
+body.fullmap #view-run { padding-bottom: 0; }
+body.fullmap .map-btns { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+body.fullmap .map-top { left: auto; right: max(12px, env(safe-area-inset-right, 0px)); top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+body.fullmap .mini {
+  display: flex; flex-direction: column; gap: 4px; position: absolute; z-index: 600;
+  top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+  background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(6px);
+  border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; cursor: pointer; text-align: start;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+}
+.mini-row { display: flex; gap: 16px; }
+.mini-cell { display: flex; flex-direction: column; align-items: flex-start; }
+.mini-cell b { font-family: var(--f-num); font-weight: 700; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.mini-cell em { font-style: normal; font-size: 11.5px; color: var(--muted); }
+.mini-seg { font-size: 12.5px; font-weight: 500; border-top: 1px solid var(--line); padding-top: 4px; }
+.mini-seg[data-kind="fast"] { color: var(--accent); }
+.mini-seg[data-kind="rec"] { color: var(--good); }
+
 @media (max-height: 700px) {
   .hero-num { font-size: 58px; } .hero-time { font-size: 32px; }
   .stat b { font-size: 23px; }
