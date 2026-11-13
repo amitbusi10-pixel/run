@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1622">
+<meta name="mobile-web-app-capable" content="yes">
+<title>ריצת ראש העין</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&family=Barlow+Condensed:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== ריצה ===== -->
+  <section class="view" id="view-run">
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="map-top">
+        <span class="chip" id="gpsChip"><i class="dot"></i><span id="gpsText">מחפש GPS…</span></span>
+      </div>
+      <div class="map-btns">
+        <button class="mbtn on" id="btnFollow" aria-label="מרכז את המפה עליי" title="מרכז את המפה עליי">◎</button>
+        <button class="mbtn" id="btnLayer" aria-label="החלף סוג מפה" title="החלף סוג מפה">▤</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="context" id="runContext" hidden>
+        <span id="runContextText"></span>
+        <button class="link" id="btnClearContext">ביטול</button>
+      </div>
+
+      <div class="segment" id="segment" hidden>
+        <div><span class="seg-name" id="segName">חימום</span><span class="seg-next" id="segNext"></span></div>
+        <b class="seg-left" dir="ltr" id="segLeft">5:00</b>
+      </div>
+
+      <div class="hero">
+        <div class="hero-num"><span id="vDist" dir="ltr">0.00</span><small>ק״מ</small></div>
+        <div class="hero-time" dir="ltr" id="vTime">00:00</div>
+      </div>
+      <div class="grid4">
+        <div class="stat"><label>קצב עכשיו</label><b dir="ltr" id="vPace">--:--</b><em>לק״מ</em></div>
+        <div class="stat"><label>קצב ממוצע</label><b dir="ltr" id="vAvg">--:--</b><em>לק״מ</em></div>
+        <div class="stat"><label>צעדים</label><b dir="ltr" id="vSteps">0</b><em><span dir="ltr" id="vCad">0</span> צעדים בדקה</em></div>
+        <div class="stat"><label>קלוריות</label><b dir="ltr" id="vCal">0</b><em>קק״ל</em></div>
+      </div>
+
+      <div class="coach" id="coach" data-state="idle">
+        <div class="coach-row">
+          <span id="coachText">יעד: <b dir="ltr" id="coachTarget">6:00</b> לק״מ</span>
+          <span class="coach-ghost" id="coachGhost"></span>
+        </div>
+        <div class="pace-bar"><div class="pace-needle" id="paceNeedle"></div></div>
+        <div class="pace-scale"><span>מהר</span><span>בקצב</span><span>איטי</span></div>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary big" id="btnStart">התחל ריצה</button>
+        <button class="btn" id="btnPause" hidden>השהה</button>
+        <button class="btn primary" id="btnResume" hidden>המשך</button>
+        <button class="btn danger" id="btnStop" hidden>סיים</button>
+      </div>
+      <p class="hint" id="runHint">בזמן הריצה המסך נשאר דולק כדי שה־GPS ימשיך לעקוב.</p>
+    </div>
+    <div class="countdown" id="countdown" hidden><span id="cdNum">3</span></div>
+  </section>
+
+  <!-- ===== היסטוריה ===== -->
+  <section class="view" id="view-history" hidden>
+    <header class="vhead"><h1>היסטוריה</h1></header>
+    <div class="card week">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120" class="ring" aria-hidden="true"><circle cx="60" cy="60" r="50" class="ring-bg"/><circle cx="60" cy="60" r="50" class="ring-fg" id="weekRing"/></svg>
+        <div class="ring-txt"><b dir="ltr" id="weekKm">0</b><span>מתוך <span dir="ltr" id="weekGoal">15</span> ק״מ</span></div>
+      </div>
+      <div class="week-side">
+        <h2>השבוע</h2>
+        <p id="weekMsg"></p>
+        <div class="mini"><span>ריצות</span><b id="weekRuns">0</b></div>
+        <div class="mini"><span>זמן</span><b dir="ltr" id="weekTime">0:00</b></div>
+      </div>
+    </div>
+    <div class="card"><h2>8 השבועות האחרונים (ק״מ)</h2><div id="weeksChart" class="chart"></div></div>
+    <div class="card"><h2>שיאים אישיים</h2><div class="prs" id="prs"></div></div>
+    <h2 class="list-title">כל הריצות <span class="sub" id="histCount"></span></h2>
+    <div class="list" id="histList"></div>
+  </section>
+
+  <!-- ===== פרטי ריצה / סיכום ===== -->
+  <section class="view" id="view-detail" hidden>
+    <header class="vhead row">
+      <button class="back" id="btnBack" aria-label="חזרה">→</button>
+      <div><h1 id="dTitle">ריצה</h1><span class="sub" id="dSub"></span></div>
+    </header>
+    <div class="detail-map" id="dMap"></div>
+    <div class="grid4 pad">
+      <div class="stat"><label>מרחק</label><b dir="ltr" id="dDist"></b><em>ק״מ</em></div>
+      <div class="stat"><label>זמן</label><b dir="ltr" id="dTime"></b><em>בתנועה</em></div>
+      <div class="stat"><label>קצב ממוצע</label><b dir="ltr" id="dPace"></b><em>לק״מ</em></div>
+      <div class="stat"><label>צעדים</label><b dir="ltr" id="dSteps"></b><em><span dir="ltr" id="dCad"></span> צעדים בדקה</em></div>
+    </div>
+    <div class="note good" id="dBadge" hidden></div>
+
+    <div class="card" id="saveRouteCard" hidden>
+      <h2>לשמור את הדרך כמסלול?</h2>
+      <p class="muted">כך תוכל לרוץ בו שוב ולהתחרות בשיא שלך.</p>
+      <label class="fld">שם המסלול<input id="routeName" maxlength="40" placeholder="הלולאה של הפארק"></label>
+      <div class="actions"><button class="btn primary" id="btnSaveRoute">שמור מסלול</button><button class="btn" id="btnSkipRoute">לא עכשיו</button></div>
+    </div>
+    <div class="card" id="matchRouteCard" hidden>
+      <h2 id="matchTitle">נראה שרצת במסלול שמור</h2>
+      <div class="actions"><button class="btn primary" id="btnMatchYes">שייך למסלול</button><button class="btn" id="btnMatchNo">זה מסלול אחר</button></div>
+    </div>
+
+    <div class="card">
+      <h2>קצב לאורך הריצה</h2>
+      <div id="dChart" class="chart"></div>
+    </div>
+    <div class="card">
+      <h2>זמן לכל ק״מ</h2>
+      <div id="dSplits"></div>
+    </div>
+    <div class="card">
+      <h2>הערה</h2>
+      <textarea id="dNote" rows="2" placeholder="איך הרגשת? מזג אוויר, מסלול…"></textarea>
+    </div>
+    <div class="actions pad">
+      <button class="btn" id="btnCopy">העתק סיכום</button>
+      <button class="btn danger" id="btnDelete">מחק ריצה</button>
+    </div>
+    <div class="confirm" id="delConfirm" hidden>
+      <span>למחוק את הריצה לצמיתות? אי אפשר לשחזר אותה.</span>
+      <button class="btn danger" id="btnDelYes">כן, מחק</button>
+      <button class="btn" id="btnDelNo">ביטול</button>
+    </div>
+  </section>
+
+  <!-- ===== מסלולים ===== -->
+  <section class="view" id="view-routes" hidden>
+    <header class="vhead"><h1>המסלולים שלי</h1><span class="sub">בסיום ריצה אפשר לשמור את הדרך כמסלול</span></header>
+    <div class="list" id="routeList"></div>
+  </section>
+
+  <!-- ===== פרטי מסלול ===== -->
+  <section class="view" id="view-route" hidden>
+    <header class="vhead row">
+      <button class="back" id="btnRouteBack" aria-label="חזרה">→</button>
+      <div><h1 id="rTitle">מסלול</h1><span class="sub" id="rSub"></span></div>
+    </header>
+    <div class="detail-map" id="rMap"></div>
+    <div class="actions pad"><button class="btn primary" id="btnRunRoute">רוץ במסלול הזה</button></div>
+    <div class="card"><h2>כל הריצות במסלול</h2><div id="rRuns"></div></div>
+    <div class="card">
+      <h2>שינוי שם</h2>
+      <div class="actions"><input class="inp" id="rRename" maxlength="40"><button class="btn" id="btnRename">שמור שם</button></div>
+    </div>
+    <div class="actions pad"><button class="btn danger" id="btnRouteDel">מחק מסלול</button></div>
+    <div class="confirm" id="routeDelConfirm" hidden>
+      <span>למחוק את המסלול? הריצות עצמן יישארו בהיסטוריה.</span>
+      <button class="btn danger" id="btnRouteDelYes">כן, מחק</button>
+      <button class="btn" id="btnRouteDelNo">ביטול</button>
+    </div>
+  </section>
+
+  <!-- ===== תוכנית ===== -->
+  <section class="view" id="view-plan" hidden>
+    <header class="vhead"><h1>תוכנית אימונים</h1><span class="sub">שיפור הזמן שלך במרחק שאתה כבר רץ</span></header>
+    <div class="card form" id="planSetup">
+      <h2>המטרה שלך</h2>
+      <div class="row3">
+        <label class="fld">מרחק (ק״מ)<input id="pDist" type="number" step="0.5" min="1" max="42" dir="ltr" value="5"></label>
+        <label class="fld">זמן יעד<input id="pTime" inputmode="numeric" dir="ltr" placeholder="30:00" value="30:00"></label>
+        <label class="fld">ימים בשבוע<select id="pDays"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></label>
+      </div>
+      <p class="muted" id="pPreview"></p>
+      <p class="err" id="pErr" hidden></p>
+      <div class="actions"><button class="btn primary" id="btnMakePlan">בנה תוכנית</button></div>
+    </div>
+    <div id="planBody"></div>
+  </section>
+
+  <!-- ===== הגדרות ===== -->
+  <section class="view" id="view-settings" hidden>
+    <header class="vhead"><h1>הגדרות</h1></header>
+    <form id="settingsForm" class="form">
+      <div class="card">
+        <h2>מטרת הקצב בריצה חופשית</h2>
+        <div class="row2">
+          <label class="fld">קצב יעד (דקות לק״מ)<input id="sPace" inputmode="numeric" placeholder="6:00" dir="ltr"></label>
+          <label class="fld">סטייה מותרת (שניות)<input id="sTol" type="number" min="5" max="60" dir="ltr"></label>
+        </div>
+        <label class="fld">יעד שבועי (ק״מ)<input id="sWeek" type="number" min="1" max="200" dir="ltr"></label>
+      </div>
+
+      <div class="card">
+        <h2>מחשבון קצב</h2>
+        <p class="muted">באיזה קצב צריך לרוץ כדי לסיים מרחק בזמן שבחרת?</p>
+        <div class="row2">
+          <label class="fld">מרחק (ק״מ)<input id="cDist" type="number" step="0.1" min="0.5" dir="ltr" value="5"></label>
+          <label class="fld">זמן יעד<input id="cTime" placeholder="28:00" dir="ltr" inputmode="numeric"></label>
+        </div>
+        <div class="calc-out"><span>הקצב הנדרש:</span><b dir="ltr" id="cOut">--:--</b><span class="muted-i">לק״מ</span><button type="button" class="btn small" id="cApply">קבע כקצב יעד</button></div>
+      </div>
+
+      <div class="card">
+        <h2>הנתונים שלי</h2>
+        <div class="row2">
+          <label class="fld">משקל (ק״ג)<input id="sWeight" type="number" min="30" max="200" dir="ltr"></label>
+          <label class="fld">גובה (ס״מ)<input id="sHeight" type="number" min="120" max="220" dir="ltr"></label>
+        </div>
+        <p class="muted">המשקל משמש לחישוב הקלוריות. הגובה משמש להערכת הצעדים כשחיישן התנועה לא זמין.</p>
+      </div>
+
+      <div class="card">
+        <h2>בזמן הריצה</h2>
+        <label class="sw"><input type="checkbox" id="sVibeKm"><span>רטט בסיום כל ק״מ</span></label>
+        <label class="sw"><input type="checkbox" id="sVibeSeg"><span>רטט במעבר בין קטעים באימון</span></label>
+        <label class="sw"><input type="checkbox" id="sAuto"><span>השהיה אוטומטית כשאני עוצר</span></label>
+        <label class="fld">סוג מפה
+          <select id="sMap"><option value="auto">אוטומטי לפי מצב התצוגה</option><option value="voyager">רחובות, בהירה</option><option value="dark">רחובות, כהה</option><option value="sat">לוויין</option></select>
+        </label>
+      </div>
+      <div class="actions"><button class="btn primary" type="submit">שמור הגדרות</button><span class="saved" id="savedMsg" hidden>ההגדרות נשמרו</span></div>
+
+      <div class="card">
+        <h2>גיבוי</h2>
+        <p class="muted">כל הנתונים נשמרים רק בטלפון שלך. כדאי לייצא גיבוי מדי פעם.</p>
+        <div class="actions">
+          <button type="button" class="btn" id="btnExport">ייצוא גיבוי</button>
+          <label class="btn" for="importFile">ייבוא גיבוי</label>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+        </div>
+        <p class="muted" id="backupMsg"></p>
+      </div>
+    </form>
+  </section>
+
+  <nav class="tabs" id="tabs">
+    <button data-v="run" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM9.8 8.9 7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3A7.3 7.3 0 0 0 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6a2 2 0 0 0-1.7-1c-.3 0-.5 0-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg><span>ריצה</span></button>
+    <button data-v="history"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 2 4.9l-1.4 1.4A9 9 0 1 0 13 3zm-1 5v5l4.3 2.5.7-1.2-3.5-2.1V8z"/></svg><span>היסטוריה</span></button>
+    <button data-v="routes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3a3 3 0 0 0-1 5.83V21h2v-4h6.5a4.5 4.5 0 0 0 0-9H8.83A3 3 0 0 0 6 3zm0 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm2.83 5h4.67a2.5 2.5 0 0 1 0 5H7V8.83A3 3 0 0 0 8.83 10zM18 2l-4 4 4 4 1.4-1.4L17.8 7H22V5h-4.2l1.6-1.6z"/></svg><span>מסלולים</span></button>
+    <button data-v="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14zm-8.5-2.5-3.5-3.5 1.4-1.4 2.1 2.1 4.6-4.6 1.4 1.4z"/></svg><span>תוכנית</span></button>
+    <button data-v="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4L10.7 6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.7h4l.3-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>הגדרות</span></button>
+  </nav>
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
