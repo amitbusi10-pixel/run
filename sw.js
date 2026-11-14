@@ -1,8 +1,8 @@
 // שמירת האפליקציה ואריחי המפה במטמון, כדי שתעבוד גם כשהקליטה חלשה
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = `shell-${VERSION}`;
 const TILES = 'tiles-v1';
-const SHELL_FILES = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
+const SHELL_FILES = ['./', 'index.html', 'styles.css?v=6', 'app.js?v=6', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'];
 
@@ -36,7 +36,10 @@ self.addEventListener('fetch', (e) => {
   }
   // קבצי האפליקציה: קודם רשת (כדי לקבל עדכונים), ואם אין רשת — מהמטמון
   if (url.startsWith(self.location.origin) || url.includes('cdnjs.cloudflare.com') || url.includes('fonts.g')) {
-    e.respondWith(fetch(req).then((res) => {
+    // cache: 'no-cache' מוודא מול השרת שזו הגרסה האחרונה, כדי שכל עדכון יגיע לכולם מיד
+    const own = url.startsWith(self.location.origin);
+    const net = !own ? fetch(req) : req.mode === 'navigate' ? fetch(url, { cache: 'no-cache' }) : fetch(req, { cache: 'no-cache' });
+    e.respondWith(net.then((res) => {
       const copy = res.clone();
       caches.open(SHELL).then((c) => c.put(req, copy));
       return res;
