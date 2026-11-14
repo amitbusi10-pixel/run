@@ -340,11 +340,23 @@ body.fullmap .mini {
 .kmh { color: var(--good); display: block; }
 
 /* ---- יעד להיום ---- */
-.goal { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line)); border-radius: 12px; padding: 6px 12px; font-size: 14px; }
-.goal label { font-weight: 500; }
-.goal-in { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
-.goal-in input { width: 72px; text-align: center; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 6px; font-size: 17px; font-weight: 700; color: var(--fg); font-family: var(--f-num); }
-.goal-left { color: var(--muted); font-size: 13px; }
+.goalcard { background: var(--surface); border-radius: 14px; padding: 10px 12px 8px; }
+.gc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; min-height: 30px; }
+.gc-head b { font-family: var(--f-num); font-size: 20px; }
+.gc-pm { display: inline-flex; gap: 6px; }
+.gc-pm button { width: 34px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); font-size: 18px; font-weight: 500; line-height: 1; cursor: pointer; }
+.gc-left { color: var(--good); font-weight: 500; font-size: 13px; }
+.gc-track { position: relative; height: 12px; border-radius: 6px; background: var(--surface-2); margin: 22px 2px 4px; direction: ltr; }
+.gc-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 6px; background: var(--accent); transition: width .6s ease; }
+.goalcard.hit .gc-fill { background: var(--good); }
+#goalTicks i { position: absolute; top: -3px; width: 2px; height: 18px; margin-left: -1px; background: var(--bg); border-radius: 1px; }
+.gc-dot { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: #2f8cff; border: 3px solid #fff; transform: translate(-50%, -50%); transition: left .6s ease; box-shadow: 0 0 0 4px rgba(47,140,255,.25); }
+.gc-flag { position: absolute; right: -3px; top: -19px; width: 15px; height: 15px; fill: var(--fg); }
+.goalcard.hit .gc-flag { fill: var(--good); }
+.gc-lbls { position: relative; height: 15px; direction: ltr; margin: 0 2px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.gc-lbls span { position: absolute; transform: translateX(-50%); }
+.gc-lbls span:first-child { transform: none; }
+.gc-lbls span:last-child { transform: translateX(-100%); }
 
 /* ---- מצב כיס ---- */
 .pocket-btn { width: 100%; gap: 8px; padding: 9px; }
