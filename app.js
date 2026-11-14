@@ -1,5 +1,5 @@
 'use strict';
-/* ריצת ראש העין — GPS, צעדים, מפה, מסלולים, תוכנית אימונים. כל הנתונים נשמרים בטלפון. */
+/* על הדרך — GPS, צעדים, מפה, מסלולים, תוכנית אימונים. כל הנתונים נשמרים בטלפון. */
 
 const $ = (s) => document.querySelector(s);
 const ROSH_HAAYIN = [32.0956, 34.9566];
@@ -599,13 +599,14 @@ function countdown() {
     }, 1000);
   });
 }
-async function startRun() {
+async function startRun(opts) {
   if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
     try { await DeviceMotionEvent.requestPermission(); } catch (e) { /* */ }
   }
   startGps();
   requestWake();
-  await countdown();
+  hideInstall();
+  if (!(opts && opts.quick)) await countdown();
   Object.assign(R, {
     status: 'running', autoPaused: false, start: Date.now(), elapsed: 0, lastTick: Date.now(), elapsedAtMove: 0, lastMove: Date.now(),
     dist: 0, points: [], last: null, jumps: 0, steps: 0, stepTimes: [], splits: [], kmNext: 1000, lastSplitT: 0, curPace: NaN, segIdx: -1, done: false,
@@ -1171,7 +1172,7 @@ $('#importFile').addEventListener('change', async (e) => {
 
 /* ---------------- שיתוף האפליקציה ---------------- */
 const SHARE_URL = 'https://amitbusi10-pixel.github.io/run/';
-const SHARE_TEXT = 'אפליקציית ריצה עם GPS מדויק, ספירת צעדים, מסלולים ותוכנית אימונים. לפתוח את הקישור ב־Chrome ולבחור בתפריט ⋮ „הוספה למסך הבית“.';
+const SHARE_TEXT = '„על הדרך“, אפליקציית ריצה עם GPS מדויק, ספירת צעדים, מסלולים ותוכנית אימונים. לפתוח את הקישור ב־Chrome ולבחור בתפריט ⋮ „הוספה למסך הבית“.';
 async function copyShareUrl() {
   try { await navigator.clipboard.writeText(SHARE_URL); }
   catch (e) {
@@ -1183,7 +1184,7 @@ async function copyShareUrl() {
 }
 $('#btnShare').onclick = async () => {
   if (navigator.share) {
-    try { await navigator.share({ title: 'ריצת ראש העין', text: SHARE_TEXT, url: SHARE_URL }); }
+    try { await navigator.share({ title: 'על הדרך', text: SHARE_TEXT, url: SHARE_URL }); }
     catch (e) { /* המשתמש סגר את חלון השיתוף */ }
   } else copyShareUrl();
 };
@@ -1207,6 +1208,55 @@ $('#btnQr').onclick = async () => {
     toast('אין חיבור לאינטרנט, ולכן הקוד לא נטען. אפשר לשתף קישור במקום');
   }
 };
+
+/* ---------------- התקנה כאפליקציה ---------------- */
+// באנדרואיד: חלון ההתקנה של הדפדפן. באייפון: הסבר קצר, כי Safari לא מאפשר חלון התקנה.
+let installPrompt = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function showInstall(mode) {
+  if (isStandalone() || R.status !== 'idle') return;
+  if (Date.now() - LS.get('installDismissed', 0) < 3 * 864e5) return; // אחרי סגירה, לא מציגים שוב 3 ימים
+  const hint = $('#installHint'), btn = $('#btnInstall');
+  if (mode === 'prompt') { hint.textContent = 'ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן'; btn.hidden = false; }
+  else if (mode === 'ios') { hint.textContent = 'לוחצים על כפתור השיתוף ⬆ בתחתית Safari ובוחרים „הוספה למסך הבית“'; btn.hidden = true; }
+  else { hint.textContent = 'בתפריט הדפדפן ⋮ בוחרים „התקנת אפליקציה“ או „הוספה למסך הבית“'; btn.hidden = true; }
+  $('#installBar').hidden = false;
+}
+function hideInstall() { $('#installBar').hidden = true; }
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; showInstall('prompt'); });
+window.addEventListener('appinstalled', () => { installPrompt = null; hideInstall(); toast('„על הדרך“ הותקנה. אפשר לפתוח אותה מהמסך הראשי'); });
+$('#btnInstall').onclick = async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice.catch(() => {});
+  installPrompt = null; hideInstall();
+};
+$('#btnInstallX').onclick = () => { LS.set('installDismissed', Date.now()); hideInstall(); };
+// צילום מסך לחלון ההתקנה (?shot): ריצה לדוגמה בראש העין, בלי שום שמירה
+async function demoShot() {
+  S = Object.assign({}, S, { auto: false }); // רק בזיכרון, לא נשמר
+  await startRun({ quick: true });
+  const wp = [[32.0928, 34.9528], [32.0949, 34.9541], [32.0966, 34.9552], [32.0978, 34.9576], [32.0969, 34.9603], [32.0952, 34.9611]];
+  let ts = Date.now();
+  for (let i = 0; i < wp.length - 1; i++) {
+    const [a, b] = [wp[i], wp[i + 1]], n = Math.round(hav(a, b) / 3.1);
+    for (let k = 1; k <= n; k++) {
+      ts += 1000;
+      onPosition({ coords: { latitude: a[0] + (b[0] - a[0]) * k / n, longitude: a[1] + (b[1] - a[1]) * k / n, accuracy: 4, heading: null, speed: 3.1 }, timestamp: ts });
+    }
+  }
+  R.elapsed = R.dist / 3.05; R.curPace = 1000 / 3.1; R.lastMove = Date.now(); R.status = 'running';
+  persistActive = () => {};
+  setFollow(false);
+  renderRun();
+  setTimeout(() => { map.stop(); map.fitBounds(L.latLngBounds(wp), { padding: [50, 50], animate: false }); }, 1500);
+}
+function scheduleInstallHint() {
+  if (isStandalone() || /[?&]shot\b/.test(location.search)) return;
+  if (isIOS) setTimeout(() => showInstall('ios'), 1500);
+  else setTimeout(() => { if (!installPrompt && /Android/.test(navigator.userAgent)) showInstall('manual'); }, 5000);
+}
 
 /* ---------------- חיבור כפתורים ---------------- */
 $('#btnStart').onclick = startRun;
@@ -1246,6 +1296,8 @@ document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => sho
   if (LS.get('fullmap', false)) setFullMap(true);
   renderControls(); renderContext(); renderRun();
   tickTimer = setInterval(tick, 250);
+  scheduleInstallHint();
+  if (/[?&]shot\b/.test(location.search)) { setTimeout(demoShot, 800); return; }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
