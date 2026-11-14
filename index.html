@@ -6,19 +6,19 @@
 <meta name="theme-color" content="#0e1622">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ריצה">
+<meta name="apple-mobile-web-app-title" content="על הדרך">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="אפליקציית ריצה חינמית: GPS מדויק, ספירת צעדים, מסלולים שמורים ותוכנית אימונים.">
 <!-- תצוגה מקדימה כששולחים את הקישור בוואטסאפ -->
 <meta property="og:type" content="website">
 <meta property="og:locale" content="he_IL">
-<meta property="og:title" content="ריצת ראש העין · אפליקציית ריצה">
+<meta property="og:title" content="על הדרך · אפליקציית ריצה">
 <meta property="og:description" content="GPS מדויק, ספירת צעדים, מסלולים ותוכנית אימונים. לפתוח ב־Chrome ולבחור „הוספה למסך הבית“.">
 <meta property="og:url" content="https://amitbusi10-pixel.github.io/run/">
 <meta property="og:image" content="https://amitbusi10-pixel.github.io/run/icon-512.png">
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
-<title>ריצת ראש העין</title>
+<title>על הדרך</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -288,6 +288,12 @@
     <button data-v="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4L10.7 6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.7h4l.3-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>הגדרות</span></button>
   </nav>
   <div class="toast" id="toast" hidden></div>
+  <div class="install-bar" id="installBar" role="dialog" aria-label="התקנת האפליקציה" hidden>
+    <img src="icon-192.png" alt="" width="44" height="44">
+    <div class="ib-text"><b>להוסיף את „על הדרך“ למסך הבית?</b><span id="installHint">ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן</span></div>
+    <button type="button" class="btn primary small" id="btnInstall">התקנה</button>
+    <button type="button" class="ib-x" id="btnInstallX" aria-label="סגירה">✕</button>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
