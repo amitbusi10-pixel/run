@@ -1,5 +1,5 @@
 // שמירת האפליקציה ואריחי המפה במטמון, כדי שתעבוד גם כשהקליטה חלשה
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = `shell-${VERSION}`;
 const TILES = 'tiles-v1';
 const SHELL_FILES = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
