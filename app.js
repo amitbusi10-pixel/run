@@ -347,11 +347,93 @@ function targetPace() {
   return S.pace;
 }
 
+/* ---------------- אפליקציית אנדרואיד ---------------- */
+// כשהאתר נפתח בתוך אפליקציית האנדרואיד, ה־GPS עובר לשירות רקע: הוא ממשיך כשהמסך כבוי,
+// ובמסך הנעילה מופיעה התראה עם הזמן והמרחק. בדפדפן רגיל כל זה לא פעיל.
+const CAP = window.Capacitor;
+const NATIVE = !!(CAP && typeof CAP.isNativePlatform === 'function' && CAP.isNativePlatform());
+function plug(name) {
+  if (!NATIVE) return null;
+  try { return CAP.registerPlugin ? CAP.registerPlugin(name) : (CAP.Plugins || {})[name] || null; } catch (e) { return (CAP.Plugins || {})[name] || null; }
+}
+const BG = plug('BackgroundGeolocation'), LN = plug('LocalNotifications'), SH = plug('Share'), FSYS = plug('Filesystem');
+const LIVE_ID = 4242;
+let bgWatch = null, bgStarting = false, liveLast = 0;
+async function nativeTrackStart() {
+  if (!BG || bgWatch != null || bgStarting) return;
+  bgStarting = true;
+  if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  if (LN) {
+    try {
+      await LN.requestPermissions();
+      await LN.createChannel({ id: 'run-live', name: 'ריצה פעילה', description: 'זמן ומרחק בזמן הריצה', importance: 2, visibility: 1, vibration: false });
+    } catch (e) { /* ההתראה לא חובה */ }
+  }
+  try {
+    bgWatch = await BG.addWatcher({
+      backgroundTitle: 'על הדרך: ריצה פעילה',
+      backgroundMessage: 'הזמן והמרחק נמדדים גם כשהמסך כבוי',
+      requestPermissions: true, stale: false, distanceFilter: 0,
+    }, (loc, err) => {
+      if (err) {
+        if (err.code === 'NOT_AUTHORIZED') {
+          setGps('bad', 'אין הרשאת מיקום. יש לאשר מיקום בהגדרות האפליקציה');
+          if (window.confirm('האפליקציה צריכה גישה למיקום כדי למדוד את הריצה. לפתוח את ההגדרות?')) BG.openSettings();
+        }
+        return;
+      }
+      if (!loc) return;
+      onPosition({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy, heading: loc.bearing, speed: loc.speed }, timestamp: loc.time || Date.now() });
+      updateLive();
+    });
+  } catch (e) {
+    bgWatch = null; startWebGps();
+  }
+  bgStarting = false;
+}
+async function nativeTrackStop() {
+  if (bgWatch != null && BG) { try { await BG.removeWatcher({ id: bgWatch }); } catch (e) { /* */ } }
+  bgWatch = null;
+  if (LN) { try { await LN.cancel({ notifications: [{ id: LIVE_ID }] }); } catch (e) { /* */ } }
+  startWebGps();
+}
+// ההתראה במסך הנעילה: מתעדכנת כל 5 שניות
+function updateLive(force) {
+  if (!LN || R.status === 'idle') return;
+  const now = Date.now();
+  if (!force && now - liveLast < 5000) return;
+  liveLast = now;
+  const avg = R.dist > 50 ? R.elapsed / (R.dist / 1000) : NaN;
+  let body = isFinite(avg) ? `קצב ממוצע ${fmtPace(avg)} לק״מ${kmhTxt(avg)}` : 'הריצה התחילה';
+  if (R.goal) body += R.goalHit ? ' · הגעת ליעד ✓' : ` · נשארו ${fmtKm(Math.max(0, R.goal * 1000 - R.dist))} ק״מ ליעד`;
+  if (R.status === 'paused') body = 'הריצה בהשהיה';
+  LN.schedule({ notifications: [{
+    id: LIVE_ID, title: `${fmtKm(R.dist)} ק״מ · ${fmtClock(R.elapsed)}`, body,
+    channelId: 'run-live', ongoing: true, autoCancel: false, smallIcon: 'ic_tracking', iconColor: '#ff7a45',
+  }] }).catch(() => {});
+}
+// שיתוף ושמירת קבצים בתוך האפליקציה (הדפדפן הפנימי לא תומך בשיתוף רגיל)
+function blobToBase64(blob) {
+  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = rej; fr.readAsDataURL(blob); });
+}
+async function nativeShare({ title, text, url, blob, name }) {
+  const opts = { title, text, url, dialogTitle: title };
+  if (blob && FSYS) {
+    const w = await FSYS.writeFile({ path: name, data: await blobToBase64(blob), directory: 'CACHE' });
+    opts.files = [w.uri];
+  }
+  await SH.share(opts);
+}
+
 function startGps() {
+  if (NATIVE && R.status !== 'idle') { nativeTrackStart(); return; }
+  startWebGps();
+}
+function startWebGps() {
   if (!('geolocation' in navigator)) { setGps('bad', 'אין GPS במכשיר הזה'); return; }
-  if (watchId != null) return;
+  if (watchId != null || bgWatch != null) return;
   watchId = navigator.geolocation.watchPosition(onPosition, (err) => {
-    if (err.code === 1) setGps('bad', 'אין הרשאת מיקום. יש לאשר מיקום בהגדרות הדפדפן');
+    if (err.code === 1) setGps('bad', `אין הרשאת מיקום. יש לאשר מיקום בהגדרות ${NATIVE ? 'האפליקציה' : 'הדפדפן'}`);
     else setGps('bad', 'אין קליטת GPS');
   }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
 }
@@ -359,6 +441,7 @@ function setGps(q, text) { $('#gpsChip').dataset.q = q; $('#gpsText').textConten
 
 function onPosition(pos) {
   const c = pos.coords, ts = pos.timestamp || Date.now();
+  if (R.status === 'running' && !R.autoPaused) { const now = Date.now(); R.elapsed += (now - R.lastTick) / 1000; R.lastTick = now; }
   const acc = Math.round(c.accuracy);
   if (acc <= 10) setGps('good', `GPS מדויק, ±${acc} מ׳`);
   else if (acc <= 25) setGps('ok', `GPS בינוני, ±${acc} מ׳`);
@@ -472,12 +555,13 @@ function tick() {
   const now = Date.now();
   if (R.status === 'running' && !R.autoPaused) {
     R.elapsed += (now - R.lastTick) / 1000;
-    if (S.auto && !document.hidden && R.dist > 0 && now - R.lastMove > 12000) {
+    if (S.auto && (NATIVE || !document.hidden) && R.dist > 0 && now - R.lastMove > 12000) {
       R.autoPaused = true; R.elapsed = R.elapsedAtMove;
       toast('השהיה אוטומטית: זיהיתי עצירה');
     }
   }
   R.lastTick = now;
+  if (NATIVE) updateLive();
   if (R.status === 'running') { updateSegments(); if (now - (R.lastSave || 0) > 5000) { R.lastSave = now; persistActive(); } }
   renderRun();
 }
@@ -671,7 +755,7 @@ async function startRun(opts) {
   if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
     try { await DeviceMotionEvent.requestPermission(); } catch (e) { /* */ }
   }
-  startGps();
+  if (NATIVE) nativeTrackStart(); else startGps();
   requestWake();
   hideInstall();
   const goal = planRun() ? 0 : LS.get('goalKm', 5);
@@ -689,11 +773,12 @@ async function startRun(opts) {
 }
 function pauseRun() {
   R.status = 'paused'; R.last = null; filter.reset();
-  persistActive(); renderControls();
+  persistActive(); renderControls(); if (NATIVE) updateLive(true);
 }
 function resumeRun() {
   R.status = 'running'; R.autoPaused = false; R.lastTick = Date.now(); R.lastMove = Date.now();
   requestWake(); renderControls();
+  if (NATIVE) { nativeTrackStart(); updateLive(true); }
 }
 async function stopRun() {
   const wasPaused = R.status;
@@ -739,6 +824,7 @@ function resetRun() {
   LS.del('activeRun');
   clearTrack(); showGhostRoute(null);
   if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  if (NATIVE) nativeTrackStop();
   lockTabs(false);
   renderControls(); renderContext(); renderRun();
 }
@@ -1222,8 +1308,14 @@ $('#cApply').onclick = () => {
 $('#btnExport').onclick = () => {
   const data = { app: 'rosh-haayin-runner', version: 1, exported: new Date().toISOString(), settings: S, plan, runs, routes };
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-  const a = document.createElement('a');
   const d = new Date();
+  if (NATIVE && SH) {
+    nativeShare({ title: 'גיבוי הריצות', blob, name: `backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json` })
+      .then(() => { $('#backupMsg').textContent = `נוצר קובץ גיבוי עם ${runs.length} ריצות ו־${routes.length} מסלולים. שמור אותו בדרייב או שלח לעצמך.`; })
+      .catch(() => {});
+    return;
+  }
+  const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `גיבוי-ריצות-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`;
   document.body.appendChild(a); a.click(); a.remove();
@@ -1260,6 +1352,7 @@ async function copyShareUrl() {
   toast('הקישור הועתק. אפשר להדביק אותו בוואטסאפ או בהודעה');
 }
 $('#btnShare').onclick = async () => {
+  if (NATIVE && SH) { try { await nativeShare({ title: 'על הדרך', text: SHARE_TEXT, url: SHARE_URL }); } catch (e) { /* נסגר */ } return; }
   if (navigator.share) {
     try { await navigator.share({ title: 'על הדרך', text: SHARE_TEXT, url: SHARE_URL }); }
     catch (e) { /* המשתמש סגר את חלון השיתוף */ }
@@ -1330,7 +1423,7 @@ async function demoShot() {
   setTimeout(() => { map.stop(); map.fitBounds(L.latLngBounds(wp), { padding: [50, 50], animate: false }); }, 1500);
 }
 function scheduleInstallHint() {
-  if (isStandalone() || /[?&]shot\b/.test(location.search)) return;
+  if (NATIVE || isStandalone() || /[?&]shot\b/.test(location.search)) return;
   if (isIOS) setTimeout(() => showInstall('ios'), 1500);
   else setTimeout(() => { if (!installPrompt && /Android/.test(navigator.userAgent)) showInstall('manual'); }, 5000);
 }
@@ -1535,13 +1628,14 @@ $('#btnShareRun').onclick = async () => {
   const text = `${runTitle(r.start)}: ${fmtKm(r.dist)} ק״מ ב־${fmtDur(r.time)}, קצב ${fmtPace(r.time / (r.dist / 1000))} לק״מ.\nרצתי עם „על הדרך“: ${SHARE_URL}`;
   try {
     const blob = await runImage(r);
+    if (NATIVE && SH) { await nativeShare({ title: 'הריצה שלי', text, blob, name: 'run.png' }); return; }
     const file = new File([blob], 'ריצה.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
     if (navigator.share) { await navigator.share({ text }); return; }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'ריצה.png'; document.body.appendChild(a); a.click(); a.remove();
     toast('התמונה נשמרה בהורדות');
-  } catch (e) { if (e && e.name !== 'AbortError') toast('השיתוף לא הצליח. אפשר להשתמש ב„העתק סיכום“ בתחתית המסך'); }
+  } catch (e) { if (e && e.name !== 'AbortError' && !/cancel/i.test(e.message || '')) toast('השיתוף לא הצליח. אפשר להשתמש ב„העתק סיכום“ בתחתית המסך'); }
 };
 
 /* ---------------- חיבור כפתורים ---------------- */
