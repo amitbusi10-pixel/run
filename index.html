@@ -64,8 +64,8 @@
         <div class="hero-time" dir="ltr" id="vTime">00:00</div>
       </div>
       <div class="grid4">
-        <div class="stat"><label>קצב עכשיו</label><b dir="ltr" id="vPace">--:--</b><em>לק״מ</em></div>
-        <div class="stat"><label>קצב ממוצע</label><b dir="ltr" id="vAvg">--:--</b><em>לק״מ</em></div>
+        <div class="stat"><label>קצב עכשיו</label><b dir="ltr" id="vPace">--:--</b><em>לק״מ<span class="kmh" id="vPaceK"></span></em></div>
+        <div class="stat"><label>קצב ממוצע</label><b dir="ltr" id="vAvg">--:--</b><em>לק״מ<span class="kmh" id="vAvgK"></span></em></div>
         <div class="stat"><label>צעדים</label><b dir="ltr" id="vSteps">0</b><em><span dir="ltr" id="vCad">0</span> צעדים בדקה</em></div>
         <div class="stat"><label>קלוריות</label><b dir="ltr" id="vCal">0</b><em>קק״ל</em></div>
       </div>
@@ -79,15 +79,31 @@
         <div class="pace-scale"><span>מהר</span><span>בקצב</span><span>איטי</span></div>
       </div>
 
+      <div class="goal" id="goalRow">
+        <label for="goalKm">היעד להיום</label>
+        <span class="goal-in" id="goalEdit"><input id="goalKm" type="number" inputmode="decimal" min="0.5" max="100" step="0.5" dir="ltr"> ק״מ</span>
+        <span class="goal-left" id="goalLeft" hidden></span>
+      </div>
+
       <div class="controls">
         <button class="btn primary big" id="btnStart">התחל ריצה</button>
         <button class="btn" id="btnPause" hidden>השהה</button>
         <button class="btn primary" id="btnResume" hidden>המשך</button>
         <button class="btn danger" id="btnStop" hidden>סיים</button>
       </div>
+      <button class="btn pocket-btn" id="btnPocket" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zm-7-2a2 2 0 1 1 4 0v2h-4zm2 11a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>מצב כיס</button>
       <p class="hint" id="runHint">בזמן הריצה המסך נשאר דולק כדי שה־GPS ימשיך לעקוב.</p>
     </div>
     <div class="countdown" id="countdown" hidden><span id="cdNum">3</span></div>
+    <div class="pocket" id="pocket" hidden>
+      <div class="pk-lbl">מרחק</div>
+      <b class="pk-dist" dir="ltr" id="pkDist">0.00</b>
+      <div class="pk-sub" id="pkGoal">ק״מ</div>
+      <div class="pk-lbl">זמן</div>
+      <b class="pk-time" dir="ltr" id="pkTime">00:00</b>
+      <div class="pk-sub" id="pkPace"></div>
+      <div class="pk-unlock" id="pkUnlock"><span class="pk-ring" id="pkRing"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zm-7-2a2 2 0 1 1 4 0v2h-4zm2 11a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg><span>החזק 2 שניות כדי לפתוח</span></div>
+    </div>
   </section>
 
   <!-- ===== היסטוריה ===== -->
@@ -117,14 +133,24 @@
       <button class="back" id="btnBack" aria-label="חזרה">→</button>
       <div><h1 id="dTitle">ריצה</h1><span class="sub" id="dSub"></span></div>
     </header>
-    <div class="detail-map" id="dMap"></div>
+    <div class="detail-map-wrap">
+      <div class="detail-map" id="dMap"></div>
+      <button class="replay-btn" id="btnReplay"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="replayIcon" d="M8 5v14l11-7z"/></svg><span id="replayTxt">שחזור מהיר</span></button>
+      <span class="replay-chip" id="replayChip" hidden></span>
+    </div>
     <div class="grid4 pad">
       <div class="stat"><label>מרחק</label><b dir="ltr" id="dDist"></b><em>ק״מ</em></div>
       <div class="stat"><label>זמן</label><b dir="ltr" id="dTime"></b><em>בתנועה</em></div>
-      <div class="stat"><label>קצב ממוצע</label><b dir="ltr" id="dPace"></b><em>לק״מ</em></div>
+      <div class="stat"><label>קצב ממוצע</label><b dir="ltr" id="dPace"></b><em>לק״מ<span class="kmh" id="dPaceK"></span></em></div>
       <div class="stat"><label>צעדים</label><b dir="ltr" id="dSteps"></b><em><span dir="ltr" id="dCad"></span> צעדים בדקה</em></div>
     </div>
     <div class="note good" id="dBadge" hidden></div>
+    <div class="card" id="tipCard" hidden>
+      <h2>המלצה</h2>
+      <p class="tip-txt" id="tipTxt"></p>
+      <div id="stretches"></div>
+    </div>
+    <div class="actions pad"><button class="btn share-btn" id="btnShareRun"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.2c.5.5 1.2.8 2 .8a3 3 0 1 0-3-3c0 .2 0 .5.1.7L8 9.8A3 3 0 1 0 8 14.2l7.1 4.2c-.1.2-.1.4-.1.6a2.9 2.9 0 1 0 3-2.9z"/></svg>שתף את הסיכום</button></div>
 
     <div class="card" id="saveRouteCard" hidden>
       <h2>לשמור את הדרך כמסלול?</h2>
@@ -263,7 +289,7 @@
         <p class="muted">שלח לחברים קישור, או תן להם לסרוק את הקוד מהמסך שלך. כל אחד מקבל אפליקציה נקייה משלו, והריצות שלך לא עוברות אליהם.</p>
         <div class="actions">
           <button type="button" class="btn primary" id="btnShare">שתף קישור</button>
-          <button type="button" class="btn" id="btnCopy">העתק קישור</button>
+          <button type="button" class="btn" id="btnCopyLink">העתק קישור</button>
           <button type="button" class="btn" id="btnQr">הצג קוד לסריקה</button>
         </div>
         <div class="qr-box" id="qrBox" hidden>
