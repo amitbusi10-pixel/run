@@ -411,6 +411,7 @@ function updateLive(force) {
   LN.schedule({ notifications: [{
     id: LIVE_ID, title: `${fmtKm(R.dist)} ק״מ · ${fmtClock(R.elapsed)}`, body,
     channelId: 'run-live', ongoing: true, autoCancel: false, smallIcon: 'ic_tracking', iconColor: '#ff7a45',
+    isExactNotification: false, // התראה מיידית: בלי בקשת הרשאת „שעונים ותזכורות“
   }] }).catch(() => {});
 }
 // שיתוף ושמירת קבצים בתוך האפליקציה (הדפדפן הפנימי לא תומך בשיתוף רגיל)
