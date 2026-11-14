@@ -573,14 +573,36 @@ function goalText(withUnit) {
   if (R.goalHit) return `${withUnit ? 'ק״מ · ' : ''}הגעת ליעד ✓`;
   return `${withUnit ? 'ק״מ · ' : ''}נשארו ${fmtKm(R.goal * 1000 - R.dist)} ק״מ ליעד`;
 }
+let goalDrawn = null;
+function drawGoalScale(g) { // שנתות ומספרים לאורך הפס, לפי גודל היעד
+  if (goalDrawn === g) return;
+  goalDrawn = g;
+  const step = g <= 10 ? 1 : g <= 21 ? 2 : g <= 50 ? 5 : 10;
+  let ticks = '', lbls = '<span style="left:0">0</span>';
+  for (let k = step; k < g - 1e-9; k += step) {
+    const x = (k / g) * 100;
+    ticks += `<i style="left:${x}%"></i>`;
+    if (g - k >= step * 0.45) lbls += `<span style="left:${x}%">${k}</span>`;
+  }
+  lbls += `<span style="left:100%">${fmtGoal(g)}</span>`;
+  $('#goalTicks').innerHTML = ticks;
+  $('#goalLbls').innerHTML = lbls;
+}
 function renderGoal() {
-  const row = $('#goalRow');
-  row.hidden = planRun();
   const idle = R.status === 'idle';
+  $('#goalRow').hidden = planRun() || (!idle && !R.goal);
+  const g = idle ? LS.get('goalKm', 5) : R.goal;
+  if (!g) return;
+  $('#goalVal').textContent = fmtGoal(g);
+  drawGoalScale(g);
   $('#goalEdit').hidden = !idle;
   $('#goalLeft').hidden = idle;
-  if (!idle) $('#goalLeft').textContent = R.goal ? goalText(false) : 'ללא יעד';
-  $('#goalRow').querySelector('label').textContent = idle || !R.goal ? 'היעד להיום' : `היעד להיום: ${fmtGoal(R.goal)} ק״מ`;
+  const f = idle ? 0 : Math.min(1, R.dist / (g * 1000));
+  $('#goalFill').style.width = `${f * 100}%`;
+  $('#goalDot').hidden = idle;
+  $('#goalDot').style.left = `${f * 100}%`;
+  $('#goalRow').classList.toggle('hit', !idle && R.goalHit);
+  if (!idle) $('#goalLeft').textContent = goalText(false);
 }
 function renderGhost(tp) {
   const g = $('#coachGhost'), c = R.context;
@@ -652,9 +674,7 @@ async function startRun(opts) {
   startGps();
   requestWake();
   hideInstall();
-  const g = parseFloat(String($('#goalKm').value).replace(',', '.'));
-  const goal = !planRun() && g > 0 ? Math.min(g, 100) : 0;
-  if (goal) LS.set('goalKm', goal);
+  const goal = planRun() ? 0 : LS.get('goalKm', 5);
   if (!(opts && opts.quick)) await countdown();
   Object.assign(R, {
     goal, goalHit: false, bridged: 0,
@@ -1316,11 +1336,12 @@ function scheduleInstallHint() {
 }
 
 /* ---------------- יעד להיום ---------------- */
-$('#goalKm').value = LS.get('goalKm', 5);
-$('#goalKm').addEventListener('change', () => {
-  const g = parseFloat(String($('#goalKm').value).replace(',', '.'));
-  if (g > 0) LS.set('goalKm', Math.min(g, 100)); else $('#goalKm').value = LS.get('goalKm', 5);
-});
+function bumpGoal(d) {
+  const g = Math.max(0.5, Math.min(100, Math.round((LS.get('goalKm', 5) + d) * 2) / 2));
+  LS.set('goalKm', g); renderGoal();
+}
+$('#goalMinus').onclick = () => bumpGoal(-0.5);
+$('#goalPlus').onclick = () => bumpGoal(0.5);
 
 /* ---------------- מצב כיס ---------------- */
 // מסך שחור עם זמן ומרחק. האפליקציה נשארת פתוחה, ולכן ה־GPS ממשיך לעקוב. לחיצות בכיס לא עושות כלום.
@@ -1398,38 +1419,61 @@ function stopReplay(redraw = true) {
   $('#replayChip').hidden = true;
   if (was && redraw) { const r = runs.find((x) => x.id === detailId); if (r) drawRunOnMap(dMap, dLayer, r); }
 }
+// צבע לכל נקודה לפי הקצב ביחס לממוצע הריצה: ירוק מהיר, כתום בקצב, אדום איטי
+function paceColors(r) {
+  const pts = r.points, avg = r.time / (r.dist / 1000), out = [css('--accent')];
+  for (let i = 1; i < pts.length; i++) {
+    let j = i; while (j > 0 && pts[i][3] - pts[j][3] < 100) j--;
+    const pace = pts[i][3] > pts[j][3] ? ((pts[i][2] - pts[j][2]) / (pts[i][3] - pts[j][3])) * 1000 : avg;
+    out.push(pace <= avg - 10 ? css('--good') : pace <= avg + 10 ? css('--accent') : css('--bad'));
+  }
+  return out;
+}
 $('#btnReplay').onclick = () => {
   if (RP.on) { stopReplay(); return; }
   const r = runs.find((x) => x.id === detailId);
-  if (!r || !r.points || r.points.length < 2) return;
-  const pts = r.points, n = pts.length, ll = pts.map((p) => [p[0], p[1]]);
+  if (!r || !r.points || r.points.length < 2) { toast('אין מספיק נקודות כדי לשחזר את המסלול'); return; }
+  const pts = r.points, n = pts.length, ll = pts.map((p) => [p[0], p[1]]), cols = paceColors(r);
   dLayer.clearLayers();
-  L.polyline(ll, { color: css('--fg'), weight: 4, opacity: 0.22 }).addTo(dLayer);
-  const line = L.polyline([ll[0]], { color: css('--accent'), weight: 6, lineCap: 'round', lineJoin: 'round' }).addTo(dLayer);
+  L.polyline(ll, { color: css('--fg'), weight: 4, opacity: 0.18, dashArray: '2 8' }).addTo(dLayer);
+  const casing = L.polyline([ll[0]], { color: '#fff', weight: 10, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(dLayer);
+  const segGroup = L.layerGroup().addTo(dLayer);
+  const startPin = L.marker(ll[0], { interactive: false, icon: L.divIcon({ className: '', iconSize: [14, 14], iconAnchor: [7, 7], html: '<div class="pin s"></div>' }) }).addTo(dLayer);
+  void startPin;
   const dot = L.circleMarker(ll[0], { radius: 8, color: '#fff', weight: 3, fillColor: '#2f8cff', fillOpacity: 1 }).addTo(dLayer);
-  dMap.fitBounds(L.latLngBounds(ll), { padding: [24, 24], animate: false });
+  dMap.invalidateSize();
+  dMap.fitBounds(L.latLngBounds(ll), { padding: [28, 28], animate: false });
   RP.on = true;
   $('#replayTxt').textContent = 'עצור';
   $('#replayIcon').setAttribute('d', 'M6 6h12v12H6z');
   $('#replayChip').hidden = false;
-  const dur = Math.max(4000, Math.min(9000, n * 25));
+  const dur = Math.max(5000, Math.min(10000, n * 25));
   const t0 = performance.now();
-  let drawn = 0;
+  let drawn = 0, seg = null, segColor = null;
+  const addTo = (i) => { // מוסיף נקודה שלמה לקו, ומתחיל קטע חדש כשהצבע משתנה
+    if (cols[i] !== segColor) {
+      const from = seg ? seg.getLatLngs()[seg.getLatLngs().length - 1] : L.latLng(ll[i - 1] || ll[i]);
+      seg = L.polyline([from], { color: cols[i], weight: 6, lineCap: 'round', lineJoin: 'round' }).addTo(segGroup);
+      segColor = cols[i];
+    }
+    seg.addLatLng(ll[i]);
+  };
   const frame = (now) => {
     if (!RP.on) return;
     const f = Math.min(1, (now - t0) / dur);
     const pos = f * (n - 1), i = Math.min(Math.floor(pos), n - 1), k = pos - i;
-    const lls = line.getLatLngs();
-    if (lls.length > drawn + 1) lls.pop(); // מסירים את ראש הקו מהפריים הקודם
-    while (drawn < i) { drawn++; lls.push(L.latLng(ll[drawn])); }
+    // הסרת ראש הקו מהפריים הקודם
+    if (seg && seg._head) { const a = seg.getLatLngs(); a.pop(); seg.setLatLngs(a); seg._head = false; }
+    const ca = casing.getLatLngs(); if (casing._head) { ca.pop(); casing._head = false; }
+    while (drawn < i) { drawn++; addTo(drawn); ca.push(L.latLng(ll[drawn])); }
     const a = pts[i], b = pts[Math.min(i + 1, n - 1)];
-    const head = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
-    lls.push(L.latLng(head));
-    line.setLatLngs(lls);
+    const head = L.latLng(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k);
+    if (seg) { seg.addLatLng(head); seg._head = true; }
+    ca.push(head); casing._head = true; casing.setLatLngs(ca);
     dot.setLatLng(head);
     $('#replayChip').textContent = `${fmtKm(a[3] + (b[3] - a[3]) * k)} ק״מ · ${fmtDur(a[2] + (b[2] - a[2]) * k)}`;
     if (f < 1) RP.raf = requestAnimationFrame(frame);
-    else RP.end = setTimeout(() => stopReplay(), 1500);
+    else RP.end = setTimeout(() => stopReplay(), 1800);
   };
   RP.raf = requestAnimationFrame(frame);
 };
