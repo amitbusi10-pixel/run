@@ -1169,6 +1169,45 @@ $('#importFile').addEventListener('change', async (e) => {
   e.target.value = '';
 });
 
+/* ---------------- שיתוף האפליקציה ---------------- */
+const SHARE_URL = 'https://amitbusi10-pixel.github.io/run/';
+const SHARE_TEXT = 'אפליקציית ריצה עם GPS מדויק, ספירת צעדים, מסלולים ותוכנית אימונים. לפתוח את הקישור ב־Chrome ולבחור בתפריט ⋮ „הוספה למסך הבית“.';
+async function copyShareUrl() {
+  try { await navigator.clipboard.writeText(SHARE_URL); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = SHARE_URL; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  toast('הקישור הועתק. אפשר להדביק אותו בוואטסאפ או בהודעה');
+}
+$('#btnShare').onclick = async () => {
+  if (navigator.share) {
+    try { await navigator.share({ title: 'ריצת ראש העין', text: SHARE_TEXT, url: SHARE_URL }); }
+    catch (e) { /* המשתמש סגר את חלון השיתוף */ }
+  } else copyShareUrl();
+};
+$('#btnCopy').onclick = copyShareUrl;
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+  });
+}
+$('#btnQr').onclick = async () => {
+  const box = $('#qrBox');
+  if (!box.hidden) { box.hidden = true; $('#btnQr').textContent = 'הצג קוד לסריקה'; return; }
+  try {
+    if (!window.qrcode) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js');
+    const q = qrcode(0, 'M'); q.addData(SHARE_URL); q.make();
+    $('#qr').innerHTML = q.createSvgTag({ cellSize: 6, margin: 3, scalable: true });
+    $('#shareUrl').textContent = SHARE_URL;
+    box.hidden = false; $('#btnQr').textContent = 'הסתר את הקוד';
+  } catch (e) {
+    toast('אין חיבור לאינטרנט, ולכן הקוד לא נטען. אפשר לשתף קישור במקום');
+  }
+};
+
 /* ---------------- חיבור כפתורים ---------------- */
 $('#btnStart').onclick = startRun;
 $('#btnPause').onclick = pauseRun;
