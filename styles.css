@@ -335,3 +335,47 @@ body.fullmap .mini {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---- קמ״ש מתחת לקצב ---- */
+.kmh { color: var(--good); display: block; }
+
+/* ---- יעד להיום ---- */
+.goal { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line)); border-radius: 12px; padding: 6px 12px; font-size: 14px; }
+.goal label { font-weight: 500; }
+.goal-in { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.goal-in input { width: 72px; text-align: center; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 6px; font-size: 17px; font-weight: 700; color: var(--fg); font-family: var(--f-num); }
+.goal-left { color: var(--muted); font-size: 13px; }
+
+/* ---- מצב כיס ---- */
+.pocket-btn { width: 100%; gap: 8px; padding: 9px; }
+.pocket-btn svg, .pk-unlock svg, .replay-btn svg, .share-btn svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+.pocket { position: fixed; inset: 0; z-index: 2500; background: #000; color: #eef3f9; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px)); touch-action: none; user-select: none; -webkit-user-select: none; }
+.pk-lbl { font-size: 15px; color: #8ea1b8; margin-top: 18px; }
+.pk-dist { font-family: var(--f-num); font-size: min(34vw, 150px); line-height: .95; font-variant-numeric: tabular-nums; }
+.pk-time { font-family: var(--f-num); font-size: min(20vw, 92px); line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums; }
+.pk-sub { font-size: 15px; color: #8ea1b8; margin-top: 4px; }
+.pk-unlock { margin-top: auto; position: relative; display: flex; align-items: center; gap: 8px; color: #8ea1b8; font-size: 14px; padding: 14px 22px; border-radius: 30px; border: 1px solid #26303d; overflow: hidden; }
+.pk-ring { position: absolute; inset: 0; background: #1e2c40; transform: scaleX(0); transform-origin: right; z-index: -1; }
+.pk-unlock { isolation: isolate; }
+.pk-unlock.holding .pk-ring { transform: scaleX(1); transition: transform 2s linear; }
+
+/* ---- שחזור מהיר ---- */
+.detail-map-wrap { position: relative; }
+.replay-btn { position: absolute; z-index: 600; bottom: 22px; left: max(26px, calc(env(safe-area-inset-left, 0px) + 26px)); display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 20px; padding: 8px 14px; background: var(--bg); color: var(--fg); font-weight: 500; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.3); cursor: pointer; }
+.replay-chip { position: absolute; z-index: 600; top: 18px; right: max(28px, calc(env(safe-area-inset-right, 0px) + 28px)); background: var(--bg); color: var(--fg); border-radius: 14px; padding: 5px 10px; font-size: 13px; font-weight: 500; direction: rtl; }
+
+/* ---- המלצה ומתיחות ---- */
+.tip-txt { margin: 0 0 4px; line-height: 1.55; font-size: 14px; }
+.stretch { display: flex; align-items: center; gap: 12px; background: var(--surface-2); border-radius: 12px; padding: 8px 10px; margin-top: 8px; }
+.stretch svg { width: 64px; height: 64px; flex: none; color: var(--fg); }
+.stretch .hl { stroke: var(--good); }
+.stretch b { display: block; font-size: 14px; }
+.st-d { display: block; font-size: 12.5px; color: var(--good); font-weight: 500; }
+.st-how { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+.stretch .anim { transform-box: view-box; animation: stretchSway 3.2s ease-in-out infinite; }
+@keyframes stretchSway { 0%, 12% { transform: rotate(0); } 45%, 70% { transform: rotate(var(--a)); } 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .stretch .anim { animation: none; transform: rotate(var(--a)); } }
+
+/* ---- שיתוף סיכום ---- */
+.share-btn { flex: 1; gap: 8px; background: #25d366; color: #04341c; border-color: #25d366; font-weight: 700; }
