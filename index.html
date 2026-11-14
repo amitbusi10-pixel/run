@@ -244,6 +244,26 @@
         </div>
         <p class="muted" id="backupMsg"></p>
       </div>
+
+      <div class="card">
+        <h2>שיתוף האפליקציה עם חברים</h2>
+        <p class="muted">שלח לחברים קישור, או תן להם לסרוק את הקוד מהמסך שלך. כל אחד מקבל אפליקציה נקייה משלו, והריצות שלך לא עוברות אליהם.</p>
+        <div class="actions">
+          <button type="button" class="btn primary" id="btnShare">שתף קישור</button>
+          <button type="button" class="btn" id="btnCopy">העתק קישור</button>
+          <button type="button" class="btn" id="btnQr">הצג קוד לסריקה</button>
+        </div>
+        <div class="qr-box" id="qrBox" hidden>
+          <div class="qr" id="qr"></div>
+          <b dir="ltr" class="qr-url" id="shareUrl"></b>
+        </div>
+        <details class="howto">
+          <summary>איך מתקינים אחרי שפותחים את הקישור?</summary>
+          <p><b>אנדרואיד:</b> לפתוח את הקישור ב־Chrome, ללחוץ על ⋮ ולבחור <b>הוספה למסך הבית</b> או <b>התקנת אפליקציה</b>.</p>
+          <p><b>אייפון:</b> לפתוח את הקישור ב־Safari, ללחוץ על כפתור השיתוף ולבחור <b>הוספה למסך הבית</b>.</p>
+          <p>בפתיחה הראשונה צריך לאשר גישה למיקום.</p>
+        </details>
+      </div>
     </form>
   </section>
 
