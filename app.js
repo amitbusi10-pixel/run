@@ -357,6 +357,7 @@ function plug(name) {
   try { return CAP.registerPlugin ? CAP.registerPlugin(name) : (CAP.Plugins || {})[name] || null; } catch (e) { return (CAP.Plugins || {})[name] || null; }
 }
 const BG = plug('BackgroundGeolocation'), LN = plug('LocalNotifications'), SH = plug('Share'), FSYS = plug('Filesystem');
+if (NATIVE) console.info(`AL-HADERECH native ok: BG=${!!BG} LN=${!!LN} SH=${!!SH} FS=${!!FSYS} plugins=${Object.keys(CAP.Plugins || {}).join(',')}`);
 const LIVE_ID = 4242;
 let bgWatch = null, bgStarting = false, liveLast = 0;
 async function nativeTrackStart() {
