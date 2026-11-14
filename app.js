@@ -24,6 +24,10 @@ function fmtPace(spk) {
   return `${Math.floor(spk / 60)}:${pad(spk % 60)}`;
 }
 const fmtKm = (m, d = 2) => (m / 1000).toFixed(d);
+const kmh = (spk) => (isFinite(spk) && spk >= 60 && spk < 30 * 60 ? (3600 / spk).toFixed(1) : '');
+const kmhTxt = (spk) => { const k = kmh(spk); return k ? ` · ${k} קמ״ש` : ''; };
+const kmhLine = (spk) => { const k = kmh(spk); return k ? `${k} קמ״ש` : ''; };
+const fmtGoal = (km) => String(Math.round(km * 10) / 10);
 const fmtInt = (n) => Math.round(n).toLocaleString('he-IL');
 function parseTime(str) { // "28:00", "1:05:00", "6" → שניות
   if (str == null) return NaN;
@@ -367,6 +371,7 @@ function onPosition(pos) {
     return;
   }
   if (acc > 30) return; // קריאה לא מדויקת — מדלגים
+  if (R.last && ts - R.last.ts > 10000) filter.reset(); // אחרי הפסקה ארוכה מתחילים את הסינון מחדש
   const p = filter.process(c.latitude, c.longitude, acc, ts);
   moveMe(p, acc);
   if (c.heading != null && c.speed > 0.6) setHeading(c.heading);
@@ -379,6 +384,8 @@ function onPosition(pos) {
     return;
   }
   R.jumps = 0;
+  // האפליקציה לא הייתה פתוחה: משלימים את הקטע החסר בקו ישר
+  if (dt > 15) { R.bridged = (R.bridged || 0) + dd; toast(`השלמתי ${Math.round(dd)} מ׳ מהזמן שהאפליקציה לא הייתה פתוחה`, 4500); }
   if (heading == null || !(c.heading != null && c.speed > 0.6)) setHeading(bearing(R.last.p, p));
   R.last = { p, ts };
   if (R.autoPaused) { R.autoPaused = false; R.lastTick = Date.now(); toast('ממשיכים'); }
@@ -388,6 +395,13 @@ function onPosition(pos) {
   addPoint(p);
   checkSplits();
   checkWorkoutDistance();
+  checkGoal();
+}
+function checkGoal() {
+  if (!R.goal || R.goalHit || R.dist < R.goal * 1000) return;
+  R.goalHit = true;
+  vibrate([700, 150, 700, 150, 1000]);
+  toast(`הגעת ליעד של ${fmtGoal(R.goal)} ק״מ. אפשר להמשיך לרוץ`, 7000);
 }
 function addPoint(p) {
   R.points.push([+p[0].toFixed(6), +p[1].toFixed(6), +R.elapsed.toFixed(1), +R.dist.toFixed(1)]);
@@ -458,7 +472,7 @@ function tick() {
   const now = Date.now();
   if (R.status === 'running' && !R.autoPaused) {
     R.elapsed += (now - R.lastTick) / 1000;
-    if (S.auto && R.dist > 0 && now - R.lastMove > 12000) {
+    if (S.auto && !document.hidden && R.dist > 0 && now - R.lastMove > 12000) {
       R.autoPaused = true; R.elapsed = R.elapsedAtMove;
       toast('השהיה אוטומטית: זיהיתי עצירה');
     }
@@ -492,7 +506,18 @@ function renderRun() {
   $('#vDist').textContent = fmtKm(R.dist);
   $('#vTime').textContent = fmtClock(R.elapsed);
   $('#vPace').textContent = R.status === 'running' && !R.autoPaused ? fmtPace(R.curPace) : '--:--';
-  $('#vAvg').textContent = R.dist > 50 ? fmtPace(R.elapsed / (R.dist / 1000)) : '--:--';
+  const avgP = R.dist > 50 ? R.elapsed / (R.dist / 1000) : NaN;
+  const curP = R.status === 'running' && !R.autoPaused ? R.curPace : NaN;
+  $('#vAvg').textContent = fmtPace(avgP);
+  $('#vPaceK').textContent = kmhLine(curP);
+  $('#vAvgK').textContent = kmhLine(avgP);
+  renderGoal();
+  if (!$('#pocket').hidden) {
+    $('#pkDist').textContent = fmtKm(R.dist);
+    $('#pkTime').textContent = fmtClock(R.elapsed);
+    $('#pkGoal').textContent = goalText(true);
+    $('#pkPace').textContent = isFinite(avgP) ? `${fmtPace(avgP)} לק״מ${kmhTxt(avgP)}` : '';
+  }
   $('#vSteps').textContent = fmtInt(stepCount());
   $('#vCad').textContent = cadence();
   $('#vCal').textContent = Math.round(S.weight * (R.dist / 1000) * 1.036);
@@ -542,6 +567,21 @@ function renderRun() {
     renderGhost(tp);
   }
 }
+const planRun = () => R.context && R.context.type === 'plan';
+function goalText(withUnit) {
+  if (!R.goal) return withUnit ? 'ק״מ' : '';
+  if (R.goalHit) return `${withUnit ? 'ק״מ · ' : ''}הגעת ליעד ✓`;
+  return `${withUnit ? 'ק״מ · ' : ''}נשארו ${fmtKm(R.goal * 1000 - R.dist)} ק״מ ליעד`;
+}
+function renderGoal() {
+  const row = $('#goalRow');
+  row.hidden = planRun();
+  const idle = R.status === 'idle';
+  $('#goalEdit').hidden = !idle;
+  $('#goalLeft').hidden = idle;
+  if (!idle) $('#goalLeft').textContent = R.goal ? goalText(false) : 'ללא יעד';
+  $('#goalRow').querySelector('label').textContent = idle || !R.goal ? 'היעד להיום' : `היעד להיום: ${fmtGoal(R.goal)} ק״מ`;
+}
 function renderGhost(tp) {
   const g = $('#coachGhost'), c = R.context;
   g.className = 'coach-ghost';
@@ -576,6 +616,9 @@ function renderControls() {
   $('#btnPause').hidden = st !== 'running';
   $('#btnResume').hidden = st !== 'paused';
   $('#btnStop').hidden = st === 'idle';
+  $('#btnPocket').hidden = st === 'idle';
+  $('#runHint').hidden = st !== 'idle';
+  if (st === 'idle') $('#pocket').hidden = true;
   $('#btnStart').textContent = R.context && R.context.type === 'plan' ? 'התחל אימון' : 'התחל ריצה';
   $('#btnClearContext').hidden = st !== 'idle';
 }
@@ -585,7 +628,10 @@ async function requestWake() {
   try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (e) { /* לא חובה */ }
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && R.status !== 'idle') requestWake();
+  if (document.visibilityState === 'visible' && R.status !== 'idle') {
+    requestWake();
+    R.lastMove = Date.now(); // זמן חסד עד שה־GPS חוזר, כדי שלא תהיה השהיה אוטומטית מיד
+  }
 });
 
 function countdown() {
@@ -606,8 +652,12 @@ async function startRun(opts) {
   startGps();
   requestWake();
   hideInstall();
+  const g = parseFloat(String($('#goalKm').value).replace(',', '.'));
+  const goal = !planRun() && g > 0 ? Math.min(g, 100) : 0;
+  if (goal) LS.set('goalKm', goal);
   if (!(opts && opts.quick)) await countdown();
   Object.assign(R, {
+    goal, goalHit: false, bridged: 0,
     status: 'running', autoPaused: false, start: Date.now(), elapsed: 0, lastTick: Date.now(), elapsedAtMove: 0, lastMove: Date.now(),
     dist: 0, points: [], last: null, jumps: 0, steps: 0, stepTimes: [], splits: [], kmNext: 1000, lastSplitT: 0, curPace: NaN, segIdx: -1, done: false,
   });
@@ -637,6 +687,7 @@ async function stopRun() {
     id: newId(), start: R.start, end: Date.now(), dist: Math.round(R.dist), time: Math.round(R.elapsed),
     steps: stepCount(), stepsEstimated: !steps.ok, splits: R.splits.slice(), points: downsample(R.points, 5),
     cal: Math.round(S.weight * (R.dist / 1000) * 1.036), note: '', routeId: null, workout: null,
+    goal: R.goal || 0, bridged: Math.round(R.bridged || 0),
   };
   const c = R.context;
   let badge = null;
@@ -657,13 +708,14 @@ async function stopRun() {
       badge = `האימון „${w.title}“ הושלם`;
     }
   }
+  if (!badge && R.goalHit) badge = `הגעת ליעד של ${fmtGoal(R.goal)} ק״מ`;
   await saveRun(run);
   void wasPaused;
   resetRun();
   openDetail(run.id, { summary: true, badge });
 }
 function resetRun() {
-  Object.assign(R, { status: 'idle', autoPaused: false, elapsed: 0, dist: 0, points: [], last: null, steps: 0, stepTimes: [], splits: [], curPace: NaN, segIdx: -1, done: false, context: null });
+  Object.assign(R, { status: 'idle', goal: 0, goalHit: false, bridged: 0, autoPaused: false, elapsed: 0, dist: 0, points: [], last: null, steps: 0, stepTimes: [], splits: [], curPace: NaN, segIdx: -1, done: false, context: null });
   LS.del('activeRun');
   clearTrack(); showGhostRoute(null);
   if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
@@ -834,6 +886,11 @@ function openDetail(id, opts = {}) {
   $('#dDist').textContent = fmtKm(r.dist);
   $('#dTime').textContent = fmtDur(r.time);
   $('#dPace').textContent = fmtPace(r.time / (r.dist / 1000));
+  $('#dPaceK').textContent = kmhLine(r.time / (r.dist / 1000));
+  stopReplay(false);
+  $('#btnReplay').hidden = !(r.points && r.points.length > 3);
+  $('#tipCard').hidden = !opts.summary;
+  if (opts.summary) renderTip(r);
   $('#dSteps').textContent = fmtInt(r.steps);
   $('#dCad').textContent = r.time ? Math.round(r.steps / (r.time / 60)) : 0;
   $('#dBadge').hidden = !opts.badge; $('#dBadge').textContent = opts.badge || '';
@@ -1188,7 +1245,7 @@ $('#btnShare').onclick = async () => {
     catch (e) { /* המשתמש סגר את חלון השיתוף */ }
   } else copyShareUrl();
 };
-$('#btnCopy').onclick = copyShareUrl;
+$('#btnCopyLink').onclick = copyShareUrl;
 function loadScript(src) {
   return new Promise((res, rej) => {
     const s = document.createElement('script');
@@ -1257,6 +1314,191 @@ function scheduleInstallHint() {
   if (isIOS) setTimeout(() => showInstall('ios'), 1500);
   else setTimeout(() => { if (!installPrompt && /Android/.test(navigator.userAgent)) showInstall('manual'); }, 5000);
 }
+
+/* ---------------- יעד להיום ---------------- */
+$('#goalKm').value = LS.get('goalKm', 5);
+$('#goalKm').addEventListener('change', () => {
+  const g = parseFloat(String($('#goalKm').value).replace(',', '.'));
+  if (g > 0) LS.set('goalKm', Math.min(g, 100)); else $('#goalKm').value = LS.get('goalKm', 5);
+});
+
+/* ---------------- מצב כיס ---------------- */
+// מסך שחור עם זמן ומרחק. האפליקציה נשארת פתוחה, ולכן ה־GPS ממשיך לעקוב. לחיצות בכיס לא עושות כלום.
+let pocketHold = 0;
+$('#btnPocket').onclick = () => { $('#pocket').hidden = false; renderRun(); requestWake(); };
+function pocketRelease() { clearTimeout(pocketHold); $('#pkUnlock').classList.remove('holding'); }
+$('#pkUnlock').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  $('#pkUnlock').classList.add('holding');
+  pocketHold = setTimeout(() => { pocketRelease(); $('#pocket').hidden = true; vibrate(60); }, 2000);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => $('#pkUnlock').addEventListener(ev, pocketRelease));
+$('#pocket').addEventListener('contextmenu', (e) => e.preventDefault());
+
+/* ---------------- המלצה ומתיחות אחרי ריצה ---------------- */
+const STICK = 'stroke="currentColor" stroke-width="3.2" stroke-linecap="round" fill="none"';
+const STRETCHES = {
+  calf: {
+    n: 'מתיחת שוק', d: '30 שניות לכל רגל',
+    how: 'ידיים על קיר, רגל אחת אחורה וישרה, והעקב צמוד לרצפה.',
+    svg: `<line x1="70" y1="6" x2="70" y2="78" stroke="var(--line)" stroke-width="3"/>
+      <g class="anim" style="--a:7deg;transform-origin:20px 76px">
+        <circle cx="54" cy="16" r="6" ${STICK}/><line x1="51" y1="22" x2="38" y2="46" ${STICK}/>
+        <polyline points="48,28 60,34 69,30" ${STICK}/><polyline points="38,46 50,60 50,76" ${STICK}/>
+        <line x1="38" y1="46" x2="20" y2="76" class="hl" ${STICK}/></g>`,
+  },
+  quad: {
+    n: 'מתיחת ירך קדמית', d: '30 שניות לכל רגל',
+    how: 'בעמידה, תחזיק את כף הרגל מאחור ותקרב אותה לישבן. אפשר להישען על קיר.',
+    svg: `<circle cx="40" cy="12" r="6" ${STICK}/><line x1="40" y1="18" x2="40" y2="46" ${STICK}/>
+      <line x1="40" y1="46" x2="40" y2="76" ${STICK}/><line x1="40" y1="26" x2="52" y2="40" ${STICK}/>
+      <line x1="40" y1="46" x2="36" y2="62" class="hl" ${STICK}/>
+      <g class="anim" style="--a:150deg;transform-origin:36px 62px"><line x1="36" y1="62" x2="36" y2="77" class="hl" ${STICK}/></g>`,
+  },
+  ham: {
+    n: 'מתיחת ירך אחורית', d: '30 שניות לכל רגל',
+    how: 'עקב על מדרגה נמוכה, רגל ישרה, ותתכופף לאט קדימה מהמותניים.',
+    svg: `<rect x="56" y="62" width="20" height="14" rx="2" fill="none" stroke="var(--line)" stroke-width="3"/>
+      <line x1="32" y1="46" x2="32" y2="76" ${STICK}/><line x1="32" y1="46" x2="62" y2="62" class="hl" ${STICK}/>
+      <g class="anim" style="--a:42deg;transform-origin:32px 46px">
+        <line x1="32" y1="46" x2="32" y2="20" ${STICK}/><circle cx="32" cy="13" r="6" ${STICK}/>
+        <line x1="32" y1="26" x2="44" y2="38" ${STICK}/></g>`,
+  },
+};
+function renderTip(r) {
+  const km = r.dist / 1000, pace = r.time / km, min = r.time / 60;
+  const parts = [];
+  const prev = runs.filter((x) => x.id !== r.id && x.dist >= 1000 && x.time > 0).slice(0, 5);
+  if (prev.length >= 2 && km >= 1) {
+    const avg = prev.reduce((a, x) => a + x.time / (x.dist / 1000), 0) / prev.length;
+    const d = avg - pace;
+    if (d > 15) parts.push(`רצת מהר מהממוצע שלך ב־${Math.round(d)} שנ׳ לק״מ, אז כדאי שהריצה הבאה תהיה קלה ואיטית.`);
+    else if (d < -30) parts.push('הקצב היום היה רגוע מהרגיל, וזה מצוין לבניית סיבולת.');
+  }
+  if (km < 2) parts.push('אחרי ריצה קצרה מספיקות 2–3 דקות הליכה ושתייה.');
+  else if (km >= 8 || min >= 50) parts.push('ריצה ארוכה: תשתה מים, תאכל בשעה הקרובה משהו עם חלבון ופחמימות, ומחר יום מנוחה או ריצה קלה.');
+  else parts.push('תסיים ב־3–5 דקות הליכה רגועה כדי להוריד את הדופק, ותשתה מים.');
+  $('#tipTxt').textContent = parts.join(' ');
+  const pick = km < 2 ? ['calf'] : km <= 6 ? ['calf', 'quad'] : ['calf', 'ham'];
+  $('#stretches').innerHTML = pick.map((k) => {
+    const s = STRETCHES[k];
+    return `<div class="stretch"><svg viewBox="0 0 80 80" aria-hidden="true">${s.svg}</svg>
+      <div><b>${s.n}</b><span class="st-d">${s.d}</span><span class="st-how">${s.how}</span></div></div>`;
+  }).join('');
+}
+
+/* ---------------- שחזור מהיר של המסלול ---------------- */
+const RP = { raf: 0, end: 0, on: false };
+function stopReplay(redraw = true) {
+  cancelAnimationFrame(RP.raf); clearTimeout(RP.end);
+  const was = RP.on;
+  RP.on = false;
+  $('#replayTxt').textContent = 'שחזור מהיר';
+  $('#replayIcon').setAttribute('d', 'M8 5v14l11-7z');
+  $('#replayChip').hidden = true;
+  if (was && redraw) { const r = runs.find((x) => x.id === detailId); if (r) drawRunOnMap(dMap, dLayer, r); }
+}
+$('#btnReplay').onclick = () => {
+  if (RP.on) { stopReplay(); return; }
+  const r = runs.find((x) => x.id === detailId);
+  if (!r || !r.points || r.points.length < 2) return;
+  const pts = r.points, n = pts.length, ll = pts.map((p) => [p[0], p[1]]);
+  dLayer.clearLayers();
+  L.polyline(ll, { color: css('--fg'), weight: 4, opacity: 0.22 }).addTo(dLayer);
+  const line = L.polyline([ll[0]], { color: css('--accent'), weight: 6, lineCap: 'round', lineJoin: 'round' }).addTo(dLayer);
+  const dot = L.circleMarker(ll[0], { radius: 8, color: '#fff', weight: 3, fillColor: '#2f8cff', fillOpacity: 1 }).addTo(dLayer);
+  dMap.fitBounds(L.latLngBounds(ll), { padding: [24, 24], animate: false });
+  RP.on = true;
+  $('#replayTxt').textContent = 'עצור';
+  $('#replayIcon').setAttribute('d', 'M6 6h12v12H6z');
+  $('#replayChip').hidden = false;
+  const dur = Math.max(4000, Math.min(9000, n * 25));
+  const t0 = performance.now();
+  let drawn = 0;
+  const frame = (now) => {
+    if (!RP.on) return;
+    const f = Math.min(1, (now - t0) / dur);
+    const pos = f * (n - 1), i = Math.min(Math.floor(pos), n - 1), k = pos - i;
+    const lls = line.getLatLngs();
+    if (lls.length > drawn + 1) lls.pop(); // מסירים את ראש הקו מהפריים הקודם
+    while (drawn < i) { drawn++; lls.push(L.latLng(ll[drawn])); }
+    const a = pts[i], b = pts[Math.min(i + 1, n - 1)];
+    const head = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+    lls.push(L.latLng(head));
+    line.setLatLngs(lls);
+    dot.setLatLng(head);
+    $('#replayChip').textContent = `${fmtKm(a[3] + (b[3] - a[3]) * k)} ק״מ · ${fmtDur(a[2] + (b[2] - a[2]) * k)}`;
+    if (f < 1) RP.raf = requestAnimationFrame(frame);
+    else RP.end = setTimeout(() => stopReplay(), 1500);
+  };
+  RP.raf = requestAnimationFrame(frame);
+};
+
+/* ---------------- שיתוף סיכום הריצה ---------------- */
+function rrect(g, x, y, w, h, r) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); g.fill(); }
+async function runImage(r) {
+  const W = 1080, H = 1350, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  try { await Promise.all([document.fonts.load('700 80px "Barlow Condensed"'), document.fonts.load('500 40px Rubik'), document.fonts.load('700 40px Rubik')]); } catch (e) { /* */ }
+  const UI = 'Rubik, "Segoe UI", sans-serif', NUM = '"Barlow Condensed", Rubik, sans-serif';
+  g.fillStyle = '#0e1622'; g.fillRect(0, 0, W, H);
+  g.direction = 'rtl'; g.textAlign = 'right';
+  g.fillStyle = '#ff7a45'; g.font = `700 44px ${UI}`; g.fillText('על הדרך', W - 70, 100);
+  g.fillStyle = '#eef3f9'; g.font = `700 60px ${UI}`; g.fillText(runTitle(r.start), W - 70, 180);
+  g.fillStyle = '#8ea1b8'; g.font = `400 36px ${UI}`; g.fillText(`${heDay.format(r.start)} · ${heTime.format(r.start)}`, W - 70, 232);
+  // המסלול
+  const bx = 70, by = 280, bw = W - 140, bh = 620;
+  g.fillStyle = '#162131'; rrect(g, bx, by, bw, bh, 36);
+  const pts = r.points || [];
+  if (pts.length > 1) {
+    const cos = Math.cos(pts[0][0] * Math.PI / 180);
+    const xs = pts.map((p) => p[1] * cos), ys = pts.map((p) => -p[0]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pd = 70, sc = Math.min((bw - pd * 2) / (maxX - minX || 1e-9), (bh - pd * 2) / (maxY - minY || 1e-9));
+    const ox = bx + (bw - (maxX - minX) * sc) / 2, oy = by + (bh - (maxY - minY) * sc) / 2;
+    const P = (i) => [ox + (xs[i] - minX) * sc, oy + (ys[i] - minY) * sc];
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    [['#ffffff', 22], ['#ff7a45', 12]].forEach(([col, w]) => {
+      g.strokeStyle = col; g.lineWidth = w; g.beginPath();
+      pts.forEach((_, i) => { const [x, y] = P(i); if (i) g.lineTo(x, y); else g.moveTo(x, y); });
+      g.stroke();
+    });
+    [[0, '#3ccf8e'], [pts.length - 1, '#ff5468']].forEach(([i, col]) => {
+      const [x, y] = P(i);
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(x, y, 20, 0, 7); g.fill();
+      g.fillStyle = col; g.beginPath(); g.arc(x, y, 13, 0, 7); g.fill();
+    });
+  }
+  // נתונים
+  const pace = r.time / (r.dist / 1000);
+  const cells = [['מרחק', fmtKm(r.dist), 'ק״מ'], ['זמן', fmtDur(r.time), 'בתנועה'], ['קצב ממוצע', fmtPace(pace), 'לק״מ'], ['מהירות', kmh(pace) || '--', 'קמ״ש']];
+  const cw = (W - 140 - 30) / 2;
+  cells.forEach(([lbl, val, unit], i) => {
+    const x = W - 70 - (i % 2) * (cw + 30), y = 950 + Math.floor(i / 2) * 175;
+    g.fillStyle = '#162131'; rrect(g, x - cw, y, cw, 150, 28);
+    g.direction = 'rtl'; g.textAlign = 'right'; g.fillStyle = '#8ea1b8'; g.font = `400 32px ${UI}`;
+    g.fillText(lbl, x - 30, y + 50); g.fillText(unit, x - 30, y + 122);
+    g.direction = 'ltr'; g.textAlign = 'left'; g.fillStyle = '#eef3f9'; g.font = `700 96px ${NUM}`;
+    g.fillText(val, x - cw + 30, y + 120);
+  });
+  g.direction = 'ltr'; g.textAlign = 'center'; g.fillStyle = '#8ea1b8'; g.font = `400 30px ${UI}`;
+  g.fillText('amitbusi10-pixel.github.io/run', W / 2, H - 40);
+  return new Promise((res) => c.toBlob(res, 'image/png'));
+}
+$('#btnShareRun').onclick = async () => {
+  const r = runs.find((x) => x.id === detailId); if (!r) return;
+  const text = `${runTitle(r.start)}: ${fmtKm(r.dist)} ק״מ ב־${fmtDur(r.time)}, קצב ${fmtPace(r.time / (r.dist / 1000))} לק״מ.\nרצתי עם „על הדרך“: ${SHARE_URL}`;
+  try {
+    const blob = await runImage(r);
+    const file = new File([blob], 'ריצה.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+    if (navigator.share) { await navigator.share({ text }); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'ריצה.png'; document.body.appendChild(a); a.click(); a.remove();
+    toast('התמונה נשמרה בהורדות');
+  } catch (e) { if (e && e.name !== 'AbortError') toast('השיתוף לא הצליח. אפשר להשתמש ב„העתק סיכום“ בתחתית המסך'); }
+};
 
 /* ---------------- חיבור כפתורים ---------------- */
 $('#btnStart').onclick = startRun;
