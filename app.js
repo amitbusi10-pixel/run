@@ -357,14 +357,18 @@ function plug(name) {
   try { return CAP.registerPlugin ? CAP.registerPlugin(name) : (CAP.Plugins || {})[name] || null; } catch (e) { return (CAP.Plugins || {})[name] || null; }
 }
 const BG = plug('BackgroundGeolocation'), LN = plug('LocalNotifications'), SH = plug('Share'), FSYS = plug('Filesystem');
-if (NATIVE) console.info(`AL-HADERECH native ok: BG=${!!BG} LN=${!!LN} SH=${!!SH} FS=${!!FSYS} plugins=${Object.keys(CAP.Plugins || {}).join(',')}`);
+// LiveRun: התראה אחת יציבה (מחליפה את התראת שירות ה־GPS במקום), עם שעון שרץ לבד. רק בגרסאות אפליקציה חדשות.
+const LR = NATIVE && CAP.isPluginAvailable && CAP.isPluginAvailable('LiveRun') ? plug('LiveRun') : null;
+if (NATIVE) console.info(`AL-HADERECH native ok: BG=${!!BG} LR=${!!LR} LN=${!!LN} SH=${!!SH} FS=${!!FSYS} plugins=${Object.keys(CAP.Plugins || {}).join(',')}`);
 const LIVE_ID = 4242;
 let bgWatch = null, bgStarting = false, liveLast = 0;
 async function nativeTrackStart() {
   if (!BG || bgWatch != null || bgStarting) return;
   bgStarting = true;
   if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  if (LN) {
+  if (LR) {
+    try { await LN?.requestPermissions(); await LN?.cancel({ notifications: [{ id: LIVE_ID }] }); } catch (e) { /* */ }
+  } else if (LN) {
     try {
       await LN.requestPermissions();
       await LN.createChannel({ id: 'run-live', name: 'ריצה פעילה', description: 'זמן ומרחק בזמן הריצה', importance: 2, visibility: 1, vibration: false });
@@ -395,19 +399,30 @@ async function nativeTrackStart() {
 async function nativeTrackStop() {
   if (bgWatch != null && BG) { try { await BG.removeWatcher({ id: bgWatch }); } catch (e) { /* */ } }
   bgWatch = null;
+  if (LR) { try { await LR.clear(); } catch (e) { /* */ } }
   if (LN) { try { await LN.cancel({ notifications: [{ id: LIVE_ID }] }); } catch (e) { /* */ } }
   startWebGps();
 }
-// ההתראה במסך הנעילה: מתעדכנת כל 5 שניות
+// ההתראה במסך הנעילה. עם LiveRun: התראה אחת שמתעדכנת בשקט, והשעון בה רץ לבד גם כשהמסך כבוי.
+// בגרסת אפליקציה ישנה: התראה נפרדת שמתעדכנת כל 5 שניות.
 function updateLive(force) {
-  if (!LN || R.status === 'idle') return;
+  if ((!LR && !LN) || R.status === 'idle') return;
   const now = Date.now();
-  if (!force && now - liveLast < 5000) return;
+  if (!force && now - liveLast < (LR ? 3000 : 5000)) return;
   liveLast = now;
   const avg = R.dist > 50 ? R.elapsed / (R.dist / 1000) : NaN;
+  const paused = R.status === 'paused' || R.autoPaused;
   let body = isFinite(avg) ? `קצב ממוצע ${fmtPace(avg)} לק״מ${kmhTxt(avg)}` : 'הריצה התחילה';
   if (R.goal) body += R.goalHit ? ' · הגעת ליעד ✓' : ` · נשארו ${fmtKm(Math.max(0, R.goal * 1000 - R.dist))} ק״מ ליעד`;
   if (R.status === 'paused') body = 'הריצה בהשהיה';
+  else if (R.autoPaused) body = 'השהיה אוטומטית: ממשיך כשתזוז';
+  if (LR) {
+    LR.update({
+      title: paused ? `${fmtKm(R.dist)} ק״מ · ${fmtClock(R.elapsed)}` : `${fmtKm(R.dist)} ק״מ`,
+      body, running: !paused, base: Math.round(now - R.elapsed * 1000),
+    }).catch(() => {});
+    return;
+  }
   LN.schedule({ notifications: [{
     id: LIVE_ID, title: `${fmtKm(R.dist)} ק״מ · ${fmtClock(R.elapsed)}`, body,
     channelId: 'run-live', ongoing: true, autoCancel: false, smallIcon: 'ic_tracking', iconColor: '#ff7a45',
