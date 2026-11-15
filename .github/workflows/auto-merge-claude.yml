@@ -1,0 +1,43 @@
+# Changes Claude makes in the cloud land on a "claude/..." branch.
+# This runs the checks and, when they pass, merges the branch into main automatically.
+# GitHub Pages then publishes main, so the app on the phone updates by itself.
+name: Auto-merge Claude changes
+
+on:
+  push:
+    branches: ['claude/**']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-merge-main
+  cancel-in-progress: false
+
+jobs:
+  test-and-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: No personal data files in the repo
+        run: |
+          bad=$(git ls-files | grep -E '\.(gpx|fit|tcx|xlsx|xls|csv|pdf)$|(^|/)backup[^/]*\.json$' || true)
+          if [ -n "$bad" ]; then echo "Personal data files must not be in git:"; echo "$bad"; exit 1; fi
+
+      - name: Checks
+        run: node test/check.js
+
+      - name: Merge into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout main
+          git merge --no-edit "origin/${GITHUB_REF_NAME}" -m "Merge ${GITHUB_REF_NAME} (auto, checks passed)"
+          git push origin main

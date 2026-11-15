@@ -1,0 +1,6 @@
+# Personal running data (exported backups, GPS files) stays on the phone/PC only
+backup*.json
+*.gpx
+*.fit
+*.tcx
+node_modules/
