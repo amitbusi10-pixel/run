@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&family=Barlow+Condensed:wght@500;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="styles.css?v=9">
+<link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
 <div id="app">
@@ -308,6 +308,13 @@
           <p>בפתיחה הראשונה צריך לאשר גישה למיקום.</p>
         </details>
       </div>
+
+      <div class="card" id="apkCard" hidden>
+        <h2>אפליקציית אנדרואיד</h2>
+        <p class="muted">גרסה שממשיכה למדוד זמן ומרחק גם כשהמסך נעול, עם התראה במסך הנעילה. מתקינים מקובץ, והטלפון ישאל אם לאשר התקנה ממקור לא מוכר.</p>
+        <button type="button" class="btn primary" id="btnApk">הורדת האפליקציה</button>
+        <p class="muted">הריצות השמורות לא עוברות לבד: קודם מייצאים גיבוי כאן, ואחר כך מייבאים אותו באפליקציה.</p>
+      </div>
     </form>
   </section>
 
@@ -321,13 +328,13 @@
   <div class="toast" id="toast" hidden></div>
   <div class="install-bar" id="installBar" role="dialog" aria-label="התקנת האפליקציה" hidden>
     <img src="icon-192.png" alt="" width="44" height="44">
-    <div class="ib-text"><b>להוסיף את „על הדרך“ למסך הבית?</b><span id="installHint">ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן</span></div>
+    <div class="ib-text"><b id="ibTitle">להוסיף את „על הדרך“ למסך הבית?</b><span id="installHint">ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן</span></div>
     <button type="button" class="btn primary small" id="btnInstall">התקנה</button>
     <button type="button" class="ib-x" id="btnInstallX" aria-label="סגירה">✕</button>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=10"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
