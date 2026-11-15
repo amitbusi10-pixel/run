@@ -348,86 +348,93 @@ function targetPace() {
 }
 
 /* ---------------- אפליקציית אנדרואיד ---------------- */
-// כשהאתר נפתח בתוך אפליקציית האנדרואיד, ה־GPS עובר לשירות רקע: הוא ממשיך כשהמסך כבוי,
-// ובמסך הנעילה מופיעה התראה עם הזמן והמרחק. בדפדפן רגיל כל זה לא פעיל.
+// כשהאתר נפתח בתוך אפליקציית האנדרואיד, ה־GPS עובר לשירות רקע של הטלפון: הוא ממשיך כשהמסך כבוי,
+// ובמסך הנעילה יש התראה אחת קבועה עם שעון שרץ, מרחק, קצב והתקדמות ליעד. בדפדפן רגיל כל זה לא פעיל.
 const CAP = window.Capacitor;
 const NATIVE = !!(CAP && typeof CAP.isNativePlatform === 'function' && CAP.isNativePlatform());
+const hasPlugin = (name) => NATIVE && (typeof CAP.isPluginAvailable === 'function' ? CAP.isPluginAvailable(name) : !!(CAP.Plugins || {})[name]);
 function plug(name) {
-  if (!NATIVE) return null;
-  try { return CAP.registerPlugin ? CAP.registerPlugin(name) : (CAP.Plugins || {})[name] || null; } catch (e) { return (CAP.Plugins || {})[name] || null; }
+  if (!hasPlugin(name)) return null;
+  try { return CAP.registerPlugin ? CAP.registerPlugin(name) : CAP.Plugins[name]; } catch (e) { return (CAP.Plugins || {})[name] || null; }
 }
-const BG = plug('BackgroundGeolocation'), LN = plug('LocalNotifications'), SH = plug('Share'), FSYS = plug('Filesystem');
-// LiveRun: התראה אחת יציבה (מחליפה את התראת שירות ה־GPS במקום), עם שעון שרץ לבד. רק בגרסאות אפליקציה חדשות.
-const LR = NATIVE && CAP.isPluginAvailable && CAP.isPluginAvailable('LiveRun') ? plug('LiveRun') : null;
-if (NATIVE) console.info(`AL-HADERECH native ok: BG=${!!BG} LR=${!!LR} LN=${!!LN} SH=${!!SH} FS=${!!FSYS} plugins=${Object.keys(CAP.Plugins || {}).join(',')}`);
+const RT = plug('RunTracker');               // השירות החדש (מגרסה 1.7 של האפליקציה)
+const BG = RT ? null : plug('BackgroundGeolocation'); // גרסאות ישנות של האפליקציה
+const LN = RT ? null : plug('LocalNotifications');
+const SH = plug('Share'), FSYS = plug('Filesystem');
+if (NATIVE) console.info(`AL-HADERECH native ok: RT=${!!RT} BG=${!!BG} SH=${!!SH} FS=${!!FSYS}`);
 const LIVE_ID = 4242;
-let bgWatch = null, bgStarting = false, liveLast = 0;
+let trackOn = false, trackStarting = false, bgWatch = null, liveLast = 0, lastFixTs = 0, rtListeners = false;
+
+function feedNative(loc) {
+  if (!loc || !loc.time || loc.time <= lastFixTs) return; // כל נקודה פעם אחת בלבד
+  lastFixTs = loc.time;
+  onPosition({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy, heading: loc.bearing, speed: loc.speed }, timestamp: loc.time });
+  updateLive();
+}
+// נקודות שהשירות קלט כשהאפליקציה לא הספיקה לקבל אותן (למשל כשאנדרואיד השהה אותה)
+async function syncMissed() {
+  if (!RT || !trackOn) return;
+  try { const r = await RT.getSince({ time: lastFixTs }); (r.points || []).forEach(feedNative); } catch (e) { /* */ }
+}
 async function nativeTrackStart() {
-  if (!BG || bgWatch != null || bgStarting) return;
-  bgStarting = true;
+  if (trackOn || trackStarting) return;
+  trackStarting = true;
   if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  if (LR) {
-    try { await LN?.requestPermissions(); await LN?.cancel({ notifications: [{ id: LIVE_ID }] }); } catch (e) { /* */ }
-  } else if (LN) {
-    try {
-      await LN.requestPermissions();
-      await LN.createChannel({ id: 'run-live', name: 'ריצה פעילה', description: 'זמן ומרחק בזמן הריצה', importance: 2, visibility: 1, vibration: false });
-    } catch (e) { /* ההתראה לא חובה */ }
-  }
   try {
-    bgWatch = await BG.addWatcher({
-      backgroundTitle: 'על הדרך: ריצה פעילה',
-      backgroundMessage: 'הזמן והמרחק נמדדים גם כשהמסך כבוי',
-      requestPermissions: true, stale: false, distanceFilter: 0,
-    }, (loc, err) => {
-      if (err) {
-        if (err.code === 'NOT_AUTHORIZED') {
-          setGps('bad', 'אין הרשאת מיקום. יש לאשר מיקום בהגדרות האפליקציה');
-          if (window.confirm('האפליקציה צריכה גישה למיקום כדי למדוד את הריצה. לפתוח את ההגדרות?')) BG.openSettings();
-        }
-        return;
+    if (RT) {
+      if (!rtListeners) {
+        rtListeners = true;
+        RT.addListener('location', feedNative);
+        RT.addListener('action', (a) => { if (a.action === 'pause' && R.status === 'running') pauseRun(); else if (a.action === 'resume' && R.status === 'paused') resumeRun(); });
       }
-      if (!loc) return;
-      onPosition({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy, heading: loc.bearing, speed: loc.speed }, timestamp: loc.time || Date.now() });
-      updateLive();
-    });
+      await RT.start({ goal: (R.goal || LS.get('goalKm', 5)) * 1000, title: 'על הדרך', text: 'הריצה מתחילה' });
+      trackOn = true;
+      askBatteryOnce();
+    } else if (BG) {
+      bgWatch = await BG.addWatcher({ backgroundTitle: 'על הדרך: ריצה פעילה', backgroundMessage: 'הזמן והמרחק נמדדים גם כשהמסך כבוי', requestPermissions: true, stale: false, distanceFilter: 0 },
+        (loc, err) => { if (!err && loc) feedNative(loc); });
+      trackOn = true;
+    }
   } catch (e) {
-    bgWatch = null; startWebGps();
+    trackOn = false;
+    setGps('bad', 'אין הרשאת מיקום. יש לאשר מיקום בהגדרות האפליקציה');
+    startWebGps();
   }
-  bgStarting = false;
+  trackStarting = false;
 }
 async function nativeTrackStop() {
-  if (bgWatch != null && BG) { try { await BG.removeWatcher({ id: bgWatch }); } catch (e) { /* */ } }
-  bgWatch = null;
-  if (LR) { try { await LR.clear(); } catch (e) { /* */ } }
-  if (LN) { try { await LN.cancel({ notifications: [{ id: LIVE_ID }] }); } catch (e) { /* */ } }
+  try {
+    if (RT) await RT.stop();
+    else if (BG && bgWatch != null) { await BG.removeWatcher({ id: bgWatch }); if (LN) await LN.cancel({ notifications: [{ id: LIVE_ID }] }); }
+  } catch (e) { /* */ }
+  trackOn = false; bgWatch = null;
   startWebGps();
 }
-// ההתראה במסך הנעילה. עם LiveRun: התראה אחת שמתעדכנת בשקט, והשעון בה רץ לבד גם כשהמסך כבוי.
-// בגרסת אפליקציה ישנה: התראה נפרדת שמתעדכנת כל 5 שניות.
+// סמסונג עוצרת אפליקציות ברקע כדי לחסוך סוללה. אפליקציות ריצה מבקשות פטור פעם אחת.
+async function askBatteryOnce() {
+  if (!RT || LS.get('batteryAsked', false)) return;
+  try {
+    const r = await RT.isBatteryExempt();
+    if (r.granted) return;
+    LS.set('batteryAsked', true);
+    if (window.confirm('כדי שהמדידה לא תיעצר כשהמסך כבוי, כדאי לאשר לאפליקציה לפעול ברקע בלי הגבלת סוללה. לפתוח את האישור?')) await RT.requestBatteryExemption();
+  } catch (e) { /* */ }
+}
+// ההתראה במסך הנעילה. השעון רץ בה לבד; את המרחק והקצב מעדכנים כל 2 שניות, באותה התראה.
 function updateLive(force) {
-  if ((!LR && !LN) || R.status === 'idle') return;
+  if (!trackOn || R.status === 'idle') return;
   const now = Date.now();
-  if (!force && now - liveLast < (LR ? 3000 : 5000)) return;
+  if (!force && now - liveLast < 2000) return;
   liveLast = now;
   const avg = R.dist > 50 ? R.elapsed / (R.dist / 1000) : NaN;
-  const paused = R.status === 'paused' || R.autoPaused;
-  let body = isFinite(avg) ? `קצב ממוצע ${fmtPace(avg)} לק״מ${kmhTxt(avg)}` : 'הריצה התחילה';
-  if (R.goal) body += R.goalHit ? ' · הגעת ליעד ✓' : ` · נשארו ${fmtKm(Math.max(0, R.goal * 1000 - R.dist))} ק״מ ליעד`;
-  if (R.status === 'paused') body = 'הריצה בהשהיה';
-  else if (R.autoPaused) body = 'השהיה אוטומטית: ממשיך כשתזוז';
-  if (LR) {
-    LR.update({
-      title: paused ? `${fmtKm(R.dist)} ק״מ · ${fmtClock(R.elapsed)}` : `${fmtKm(R.dist)} ק״מ`,
-      body, running: !paused, base: Math.round(now - R.elapsed * 1000),
-    }).catch(() => {});
-    return;
+  const title = `${fmtKm(R.dist)} ק״מ` + (isFinite(avg) ? ` · ${fmtPace(avg)} לק״מ` : '');
+  let text = R.status === 'paused' ? `הריצה בהשהיה · ${fmtClock(R.elapsed)}` : (isFinite(avg) ? `${kmh(avg)} קמ״ש` : 'הריצה התחילה');
+  if (R.goal) text += R.goalHit ? ' · הגעת ליעד ✓' : ` · נשארו ${fmtKm(Math.max(0, R.goal * 1000 - R.dist))} ק״מ ליעד`;
+  if (RT) {
+    RT.update({ title, text, chip: `${fmtKm(R.dist, 1)} ק״מ`, elapsedMs: R.elapsed * 1000, paused: R.status === 'paused', dist: R.dist, goal: (R.goal || 0) * 1000 }).catch(() => {});
+  } else if (LN) {
+    LN.schedule({ notifications: [{ id: LIVE_ID, title: `${title} · ${fmtClock(R.elapsed)}`, body: text, channelId: 'run-live', ongoing: true, autoCancel: false, smallIcon: 'ic_tracking', iconColor: '#ff7a45', isExactNotification: false }] }).catch(() => {});
   }
-  LN.schedule({ notifications: [{
-    id: LIVE_ID, title: `${fmtKm(R.dist)} ק״מ · ${fmtClock(R.elapsed)}`, body,
-    channelId: 'run-live', ongoing: true, autoCancel: false, smallIcon: 'ic_tracking', iconColor: '#ff7a45',
-    isExactNotification: false, // התראה מיידית: בלי בקשת הרשאת „שעונים ותזכורות“
-  }] }).catch(() => {});
 }
 // שיתוף ושמירת קבצים בתוך האפליקציה (הדפדפן הפנימי לא תומך בשיתוף רגיל)
 function blobToBase64(blob) {
@@ -448,7 +455,7 @@ function startGps() {
 }
 function startWebGps() {
   if (!('geolocation' in navigator)) { setGps('bad', 'אין GPS במכשיר הזה'); return; }
-  if (watchId != null || bgWatch != null) return;
+  if (watchId != null || trackOn) return;
   watchId = navigator.geolocation.watchPosition(onPosition, (err) => {
     if (err.code === 1) setGps('bad', `אין הרשאת מיקום. יש לאשר מיקום בהגדרות ${NATIVE ? 'האפליקציה' : 'הדפדפן'}`);
     else setGps('bad', 'אין קליטת GPS');
@@ -754,6 +761,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && R.status !== 'idle') {
     requestWake();
     R.lastMove = Date.now(); // זמן חסד עד שה־GPS חוזר, כדי שלא תהיה השהיה אוטומטית מיד
+    if (NATIVE) syncMissed();
   }
 });
 
@@ -854,7 +862,7 @@ function downsample(points, minGap) {
 }
 function persistActive() {
   if (R.status === 'idle') return;
-  LS.set('activeRun', { R: Object.assign({}, R, { stepTimes: [], last: null }), saved: Date.now() });
+  LS.set('activeRun', { R: Object.assign({}, R, { stepTimes: [], last: null, lastFixTs }), saved: Date.now() });
 }
 function restoreActive() {
   const a = LS.get('activeRun', null);
@@ -865,16 +873,30 @@ function restoreActive() {
   R.points.forEach((p) => drawPoint([p[0], p[1]], paceColor(NaN, tp)));
   lockTabs(true);
   renderControls(); renderContext(); renderRun();
+  // באפליקציית האנדרואיד השירות אולי המשיך למדוד בזמן שהמסך נסגר: ממשיכים ממנו
+  if (RT) {
+    RT.status().then(async (st) => {
+      if (!st.running) { toast('שחזרתי ריצה שלא הסתיימה. אפשר להמשיך או לסיים', 6000); return; }
+      lastFixTs = a.R.lastFixTs || 0;
+      if (a.R.status === 'running' && !st.paused) {
+        R.elapsed += (Date.now() - a.saved) / 1000;
+        R.status = 'running'; R.lastTick = Date.now(); R.lastMove = Date.now();
+      }
+      await nativeTrackStart();
+      await syncMissed();
+      renderControls(); renderRun(); updateLive(true);
+      toast('הריצה ממשיכה. כל מה שנמדד ברקע נשמר', 5000);
+    }).catch(() => {});
+    return;
+  }
   toast('שחזרתי ריצה שלא הסתיימה. אפשר להמשיך או לסיים', 6000);
 }
 function lockTabs(on) { $('#tabs').classList.toggle('locked', on); }
 
 /* ---------------- ניווט ---------------- */
-const RP = { raf: 0, end: 0, on: false, ui: null }; // מצב השחזור המהיר (למטה)
 const VIEWS = ['run', 'history', 'detail', 'routes', 'route', 'plan', 'settings'];
 let currentView = 'run';
 function show(v, { push = false } = {}) {
-  if (RP.on) stopReplay(false);
   VIEWS.forEach((x) => { $('#view-' + x).hidden = x !== v; });
   const tab = v === 'detail' ? 'history' : v === 'route' ? 'routes' : v;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.v === tab));
@@ -1141,7 +1163,8 @@ function renderRoutes() {
 }
 $('#routeList').addEventListener('click', (e) => { const b = e.target.closest('.route-item'); if (b) openRoute(b.dataset.id); });
 let rMap = null, rLayer = null, routeId = null;
-function drawRouteOnMap(rt) {
+function drawRouteMap() {
+  const rt = routes.find((x) => x.id === routeId); if (!rt || !rLayer) return;
   rLayer.clearLayers();
   L.polyline(rt.points, { color: '#fff', weight: 9 }).addTo(rLayer);
   L.polyline(rt.points, { color: css('--plum'), weight: 5, lineCap: 'round', lineJoin: 'round' }).addTo(rLayer);
@@ -1159,9 +1182,8 @@ function openRoute(id) {
   $('#routeDelConfirm').hidden = true;
   rMap = ensureMiniMap('rMap', rMap);
   if (!rLayer) rLayer = L.layerGroup().addTo(rMap);
-  stopReplay(false);
-  $('#rBtnReplay').hidden = !(rt.points && rt.points.length > 3);
-  drawRouteOnMap(rt);
+  stopReplay(false, 'route');
+  drawRouteMap();
   if (!list.length) { $('#rRuns').innerHTML = '<p class="muted">עדיין אין ריצות מלאות במסלול הזה.</p>'; return; }
   const max = Math.max(...list.map((r) => r.time));
   $('#rRuns').innerHTML = list.map((r) => `<div class="rr${pr && r.id === pr.id ? ' best' : ''}"><span>${heShort.format(r.start)}</span><div class="bar"><i style="width:${(40 + 60 * (r.time / max)).toFixed(0)}%"></i></div><b dir="ltr">${fmtDur(r.time)}</b></div>`).join('')
@@ -1540,23 +1562,24 @@ function renderTip(r) {
   }).join('');
 }
 
-/* ---------------- שחזור מהיר של המסלול (היסטוריה ומסלולים) ---------------- */
-const REPLAY_UI = {
-  d: () => ({ btn: $('#btnReplay'), txt: $('#replayTxt'), icon: $('#replayIcon'), chip: $('#replayChip'), map: dMap, layer: dLayer,
-    redraw: () => { const r = runs.find((x) => x.id === detailId); if (r) drawRunOnMap(dMap, dLayer, r); } }),
-  r: () => ({ btn: $('#rBtnReplay'), txt: $('#rReplayTxt'), icon: $('#rReplayIcon'), chip: $('#rReplayChip'), map: rMap, layer: rLayer,
-    redraw: () => { const rt = routes.find((x) => x.id === routeId); if (rt) drawRouteOnMap(rt); } }),
+/* ---------------- שחזור מהיר של המסלול ---------------- */
+const PLAY_ICON = 'M8 5v14l11-7z', STOP_ICON = 'M6 6h12v12H6z';
+// שני נגנים: אחד בסיכום ריצה ואחד במסך מסלול שמור
+const REPLAYS = {
+  detail: { raf: 0, end: 0, on: false, btn: '#btnReplay', txt: '#replayTxt', icon: '#replayIcon', chip: '#replayChip',
+    map: () => dMap, layer: () => dLayer, redraw: () => { const r = runs.find((x) => x.id === detailId); if (r) drawRunOnMap(dMap, dLayer, r); } },
+  route: { raf: 0, end: 0, on: false, btn: '#rReplay', txt: '#rReplayTxt', icon: '#rReplayIcon', chip: '#rReplayChip',
+    map: () => rMap, layer: () => rLayer, redraw: () => drawRouteMap() },
 };
-function stopReplay(redraw = true) {
-  cancelAnimationFrame(RP.raf); clearTimeout(RP.end);
-  const was = RP.on, ui = RP.ui;
-  RP.on = false; RP.ui = null;
-  for (const [txt, icon, chip] of [['#replayTxt', '#replayIcon', '#replayChip'], ['#rReplayTxt', '#rReplayIcon', '#rReplayChip']]) {
-    $(txt).textContent = 'שחזור מהיר';
-    $(icon).setAttribute('d', 'M8 5v14l11-7z');
-    $(chip).hidden = true;
-  }
-  if (was && redraw && ui) ui.redraw();
+function stopReplay(redraw = true, which = 'detail') {
+  const P = REPLAYS[which];
+  cancelAnimationFrame(P.raf); clearTimeout(P.end);
+  const was = P.on;
+  P.on = false;
+  $(P.txt).textContent = 'שחזור מהיר';
+  $(P.icon).setAttribute('d', PLAY_ICON);
+  $(P.chip).hidden = true;
+  if (was && redraw) P.redraw();
 }
 // צבע לכל נקודה לפי הקצב ביחס לממוצע הריצה: ירוק מהיר, כתום בקצב, אדום איטי
 function paceColors(r) {
@@ -1568,27 +1591,32 @@ function paceColors(r) {
   }
   return out;
 }
-// data: { ll: [[lat,lng]], d: מטרים מצטברים, t: שניות מצטברות או null, cols: צבע לכל נקודה }
-function startReplay(which, data) {
-  stopReplay(false);
-  const ui = REPLAY_UI[which](), m = ui.map, layer = ui.layer;
-  const { ll, d, t, cols } = data, n = ll.length;
+// pts: [lat, lng, שניות?, מטרים?]. cols: צבע לכל נקודה. הקו נבנה מההתחלה עד הסוף ב־5 עד 10 שניות.
+function playReplay(which, pts, cols) {
+  const P = REPLAYS[which];
+  if (P.on) { stopReplay(true, which); return; }
+  if (!pts || pts.length < 2) { toast('אין מספיק נקודות כדי לשחזר את המסלול'); return; }
+  const map = P.map(), layer = P.layer();
+  const n = pts.length, ll = pts.map((p) => [p[0], p[1]]);
+  const hasTime = pts[0].length >= 4;
+  let cum = [0];
+  if (!hasTime) for (let i = 1; i < n; i++) cum.push(cum[i - 1] + hav(ll[i - 1], ll[i]));
   layer.clearLayers();
   L.polyline(ll, { color: css('--fg'), weight: 4, opacity: 0.18, dashArray: '2 8' }).addTo(layer);
   const casing = L.polyline([ll[0]], { color: '#fff', weight: 10, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
   const segGroup = L.layerGroup().addTo(layer);
   L.marker(ll[0], { interactive: false, icon: L.divIcon({ className: '', iconSize: [14, 14], iconAnchor: [7, 7], html: '<div class="pin s"></div>' }) }).addTo(layer);
   const dot = L.circleMarker(ll[0], { radius: 8, color: '#fff', weight: 3, fillColor: '#2f8cff', fillOpacity: 1 }).addTo(layer);
-  m.invalidateSize();
-  m.fitBounds(L.latLngBounds(ll), { padding: [28, 28], animate: false });
-  RP.on = true; RP.ui = ui;
-  ui.txt.textContent = 'עצור';
-  ui.icon.setAttribute('d', 'M6 6h12v12H6z');
-  ui.chip.hidden = false;
+  map.invalidateSize();
+  map.fitBounds(L.latLngBounds(ll), { padding: [28, 28], animate: false });
+  P.on = true;
+  $(P.txt).textContent = 'עצור';
+  $(P.icon).setAttribute('d', STOP_ICON);
+  $(P.chip).hidden = false;
   const dur = Math.max(5000, Math.min(10000, n * 25));
   const t0 = performance.now();
   let drawn = 0, seg = null, segColor = null;
-  const addTo = (i) => { // מוסיף נקודה שלמה לקו, ומתחיל קטע חדש כשהצבע משתנה
+  const addTo = (i) => { // מוסיף נקודה לקו, ומתחיל קטע חדש כשהצבע משתנה
     if (cols[i] !== segColor) {
       const from = seg ? seg.getLatLngs()[seg.getLatLngs().length - 1] : L.latLng(ll[i - 1] || ll[i]);
       seg = L.polyline([from], { color: cols[i], weight: 6, lineCap: 'round', lineJoin: 'round' }).addTo(segGroup);
@@ -1597,44 +1625,39 @@ function startReplay(which, data) {
     seg.addLatLng(ll[i]);
   };
   const frame = (now) => {
-    if (!RP.on || RP.ui !== ui) return;
+    if (!P.on) return;
     const f = Math.min(1, (now - t0) / dur);
-    const pos = f * (n - 1), i = Math.min(Math.floor(pos), n - 1), k = pos - i, j = Math.min(i + 1, n - 1);
-    // הסרת ראש הקו מהפריים הקודם
+    const pos = f * (n - 1), i = Math.min(Math.floor(pos), n - 1), k = pos - i;
     if (seg && seg._head) { const a = seg.getLatLngs(); a.pop(); seg.setLatLngs(a); seg._head = false; }
     const ca = casing.getLatLngs(); if (casing._head) { ca.pop(); casing._head = false; }
     while (drawn < i) { drawn++; addTo(drawn); ca.push(L.latLng(ll[drawn])); }
-    const a = ll[i], b = ll[j];
+    const a = pts[i], b = pts[Math.min(i + 1, n - 1)];
     const head = L.latLng(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k);
     if (seg) { seg.addLatLng(head); seg._head = true; }
     ca.push(head); casing._head = true; casing.setLatLngs(ca);
     dot.setLatLng(head);
-    const km = fmtKm(d[i] + (d[j] - d[i]) * k);
-    ui.chip.textContent = t ? `${km} ק״מ · ${fmtDur(t[i] + (t[j] - t[i]) * k)}` : `${km} ק״מ`;
-    if (f < 1) RP.raf = requestAnimationFrame(frame);
-    else RP.end = setTimeout(() => stopReplay(), 1800);
+    const j = Math.min(i + 1, n - 1);
+    $(P.chip).textContent = hasTime
+      ? `${fmtKm(a[3] + (b[3] - a[3]) * k)} ק״מ · ${fmtDur(a[2] + (b[2] - a[2]) * k)}`
+      : `${fmtKm(cum[i] + (cum[j] - cum[i]) * k)} ק״מ`;
+    if (f < 1) P.raf = requestAnimationFrame(frame);
+    else P.end = setTimeout(() => stopReplay(true, which), 1800);
   };
-  RP.raf = requestAnimationFrame(frame);
-}
-function runReplayData(r) {
-  return { ll: r.points.map((p) => [p[0], p[1]]), d: r.points.map((p) => p[3]), t: r.points.map((p) => p[2]), cols: paceColors(r) };
+  P.raf = requestAnimationFrame(frame);
 }
 $('#btnReplay').onclick = () => {
-  if (RP.on && RP.ui && RP.ui.btn.id === 'btnReplay') { stopReplay(); return; }
+  if (REPLAYS.detail.on) { stopReplay(true, 'detail'); return; }
   const r = runs.find((x) => x.id === detailId);
-  if (!r || !r.points || r.points.length < 2) { toast('אין מספיק נקודות כדי לשחזר את המסלול'); return; }
-  startReplay('d', runReplayData(r));
+  if (!r) return;
+  playReplay('detail', r.points, paceColors(r));
 };
-// במסלול: אם יש ריצת שיא עם נתוני זמן, משחזרים אותה (עם צבעי קצב). אחרת את קו המסלול עצמו.
-$('#rBtnReplay').onclick = () => {
-  if (RP.on && RP.ui && RP.ui.btn.id === 'rBtnReplay') { stopReplay(); return; }
-  const rt = routes.find((x) => x.id === routeId);
-  if (!rt || !rt.points || rt.points.length < 2) { toast('אין מספיק נקודות כדי לשחזר את המסלול'); return; }
-  const pr = routePR(rt.id);
-  if (pr && pr.points && pr.points.length > 3 && pr.points[0].length >= 4) { startReplay('r', runReplayData(pr)); return; }
-  const ll = rt.points.map((p) => [p[0], p[1]]), d = [0];
-  for (let i = 1; i < ll.length; i++) d.push(d[i - 1] + hav(ll[i - 1], ll[i]));
-  startReplay('r', { ll, d, t: null, cols: ll.map(() => css('--plum')) });
+// במסך מסלול שמור: משחזרים את הריצה האחרונה במסלול, ואם אין, את הדרך עצמה
+$('#rReplay').onclick = () => {
+  if (REPLAYS.route.on) { stopReplay(true, 'route'); return; }
+  const rt = routes.find((x) => x.id === routeId); if (!rt) return;
+  const last = routeRuns(routeId).filter((r) => r.points && r.points.length > 3).sort((a, b) => b.start - a.start)[0];
+  if (last) playReplay('route', last.points, paceColors(last));
+  else playReplay('route', rt.points, rt.points.map(() => css('--plum')));
 };
 
 /* ---------------- שיתוף סיכום הריצה ---------------- */
