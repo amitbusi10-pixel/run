@@ -855,9 +855,11 @@ function restoreActive() {
 function lockTabs(on) { $('#tabs').classList.toggle('locked', on); }
 
 /* ---------------- ניווט ---------------- */
+const RP = { raf: 0, end: 0, on: false, ui: null }; // מצב השחזור המהיר (למטה)
 const VIEWS = ['run', 'history', 'detail', 'routes', 'route', 'plan', 'settings'];
 let currentView = 'run';
 function show(v, { push = false } = {}) {
+  if (RP.on) stopReplay(false);
   VIEWS.forEach((x) => { $('#view-' + x).hidden = x !== v; });
   const tab = v === 'detail' ? 'history' : v === 'route' ? 'routes' : v;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.v === tab));
@@ -1124,6 +1126,12 @@ function renderRoutes() {
 }
 $('#routeList').addEventListener('click', (e) => { const b = e.target.closest('.route-item'); if (b) openRoute(b.dataset.id); });
 let rMap = null, rLayer = null, routeId = null;
+function drawRouteOnMap(rt) {
+  rLayer.clearLayers();
+  L.polyline(rt.points, { color: '#fff', weight: 9 }).addTo(rLayer);
+  L.polyline(rt.points, { color: css('--plum'), weight: 5, lineCap: 'round', lineJoin: 'round' }).addTo(rLayer);
+  setTimeout(() => { rMap.invalidateSize(); rMap.fitBounds(L.latLngBounds(rt.points), { padding: [20, 20] }); }, 60);
+}
 function openRoute(id) {
   const rt = routes.find((x) => x.id === id); if (!rt) return;
   routeId = id;
@@ -1136,10 +1144,9 @@ function openRoute(id) {
   $('#routeDelConfirm').hidden = true;
   rMap = ensureMiniMap('rMap', rMap);
   if (!rLayer) rLayer = L.layerGroup().addTo(rMap);
-  rLayer.clearLayers();
-  L.polyline(rt.points, { color: '#fff', weight: 9 }).addTo(rLayer);
-  L.polyline(rt.points, { color: css('--plum'), weight: 5, lineCap: 'round', lineJoin: 'round' }).addTo(rLayer);
-  setTimeout(() => { rMap.invalidateSize(); rMap.fitBounds(L.latLngBounds(rt.points), { padding: [20, 20] }); }, 60);
+  stopReplay(false);
+  $('#rBtnReplay').hidden = !(rt.points && rt.points.length > 3);
+  drawRouteOnMap(rt);
   if (!list.length) { $('#rRuns').innerHTML = '<p class="muted">עדיין אין ריצות מלאות במסלול הזה.</p>'; return; }
   const max = Math.max(...list.map((r) => r.time));
   $('#rRuns').innerHTML = list.map((r) => `<div class="rr${pr && r.id === pr.id ? ' best' : ''}"><span>${heShort.format(r.start)}</span><div class="bar"><i style="width:${(40 + 60 * (r.time / max)).toFixed(0)}%"></i></div><b dir="ltr">${fmtDur(r.time)}</b></div>`).join('')
@@ -1518,16 +1525,23 @@ function renderTip(r) {
   }).join('');
 }
 
-/* ---------------- שחזור מהיר של המסלול ---------------- */
-const RP = { raf: 0, end: 0, on: false };
+/* ---------------- שחזור מהיר של המסלול (היסטוריה ומסלולים) ---------------- */
+const REPLAY_UI = {
+  d: () => ({ btn: $('#btnReplay'), txt: $('#replayTxt'), icon: $('#replayIcon'), chip: $('#replayChip'), map: dMap, layer: dLayer,
+    redraw: () => { const r = runs.find((x) => x.id === detailId); if (r) drawRunOnMap(dMap, dLayer, r); } }),
+  r: () => ({ btn: $('#rBtnReplay'), txt: $('#rReplayTxt'), icon: $('#rReplayIcon'), chip: $('#rReplayChip'), map: rMap, layer: rLayer,
+    redraw: () => { const rt = routes.find((x) => x.id === routeId); if (rt) drawRouteOnMap(rt); } }),
+};
 function stopReplay(redraw = true) {
   cancelAnimationFrame(RP.raf); clearTimeout(RP.end);
-  const was = RP.on;
-  RP.on = false;
-  $('#replayTxt').textContent = 'שחזור מהיר';
-  $('#replayIcon').setAttribute('d', 'M8 5v14l11-7z');
-  $('#replayChip').hidden = true;
-  if (was && redraw) { const r = runs.find((x) => x.id === detailId); if (r) drawRunOnMap(dMap, dLayer, r); }
+  const was = RP.on, ui = RP.ui;
+  RP.on = false; RP.ui = null;
+  for (const [txt, icon, chip] of [['#replayTxt', '#replayIcon', '#replayChip'], ['#rReplayTxt', '#rReplayIcon', '#rReplayChip']]) {
+    $(txt).textContent = 'שחזור מהיר';
+    $(icon).setAttribute('d', 'M8 5v14l11-7z');
+    $(chip).hidden = true;
+  }
+  if (was && redraw && ui) ui.redraw();
 }
 // צבע לכל נקודה לפי הקצב ביחס לממוצע הריצה: ירוק מהיר, כתום בקצב, אדום איטי
 function paceColors(r) {
@@ -1539,24 +1553,23 @@ function paceColors(r) {
   }
   return out;
 }
-$('#btnReplay').onclick = () => {
-  if (RP.on) { stopReplay(); return; }
-  const r = runs.find((x) => x.id === detailId);
-  if (!r || !r.points || r.points.length < 2) { toast('אין מספיק נקודות כדי לשחזר את המסלול'); return; }
-  const pts = r.points, n = pts.length, ll = pts.map((p) => [p[0], p[1]]), cols = paceColors(r);
-  dLayer.clearLayers();
-  L.polyline(ll, { color: css('--fg'), weight: 4, opacity: 0.18, dashArray: '2 8' }).addTo(dLayer);
-  const casing = L.polyline([ll[0]], { color: '#fff', weight: 10, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(dLayer);
-  const segGroup = L.layerGroup().addTo(dLayer);
-  const startPin = L.marker(ll[0], { interactive: false, icon: L.divIcon({ className: '', iconSize: [14, 14], iconAnchor: [7, 7], html: '<div class="pin s"></div>' }) }).addTo(dLayer);
-  void startPin;
-  const dot = L.circleMarker(ll[0], { radius: 8, color: '#fff', weight: 3, fillColor: '#2f8cff', fillOpacity: 1 }).addTo(dLayer);
-  dMap.invalidateSize();
-  dMap.fitBounds(L.latLngBounds(ll), { padding: [28, 28], animate: false });
-  RP.on = true;
-  $('#replayTxt').textContent = 'עצור';
-  $('#replayIcon').setAttribute('d', 'M6 6h12v12H6z');
-  $('#replayChip').hidden = false;
+// data: { ll: [[lat,lng]], d: מטרים מצטברים, t: שניות מצטברות או null, cols: צבע לכל נקודה }
+function startReplay(which, data) {
+  stopReplay(false);
+  const ui = REPLAY_UI[which](), m = ui.map, layer = ui.layer;
+  const { ll, d, t, cols } = data, n = ll.length;
+  layer.clearLayers();
+  L.polyline(ll, { color: css('--fg'), weight: 4, opacity: 0.18, dashArray: '2 8' }).addTo(layer);
+  const casing = L.polyline([ll[0]], { color: '#fff', weight: 10, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+  const segGroup = L.layerGroup().addTo(layer);
+  L.marker(ll[0], { interactive: false, icon: L.divIcon({ className: '', iconSize: [14, 14], iconAnchor: [7, 7], html: '<div class="pin s"></div>' }) }).addTo(layer);
+  const dot = L.circleMarker(ll[0], { radius: 8, color: '#fff', weight: 3, fillColor: '#2f8cff', fillOpacity: 1 }).addTo(layer);
+  m.invalidateSize();
+  m.fitBounds(L.latLngBounds(ll), { padding: [28, 28], animate: false });
+  RP.on = true; RP.ui = ui;
+  ui.txt.textContent = 'עצור';
+  ui.icon.setAttribute('d', 'M6 6h12v12H6z');
+  ui.chip.hidden = false;
   const dur = Math.max(5000, Math.min(10000, n * 25));
   const t0 = performance.now();
   let drawn = 0, seg = null, segColor = null;
@@ -1569,23 +1582,44 @@ $('#btnReplay').onclick = () => {
     seg.addLatLng(ll[i]);
   };
   const frame = (now) => {
-    if (!RP.on) return;
+    if (!RP.on || RP.ui !== ui) return;
     const f = Math.min(1, (now - t0) / dur);
-    const pos = f * (n - 1), i = Math.min(Math.floor(pos), n - 1), k = pos - i;
+    const pos = f * (n - 1), i = Math.min(Math.floor(pos), n - 1), k = pos - i, j = Math.min(i + 1, n - 1);
     // הסרת ראש הקו מהפריים הקודם
     if (seg && seg._head) { const a = seg.getLatLngs(); a.pop(); seg.setLatLngs(a); seg._head = false; }
     const ca = casing.getLatLngs(); if (casing._head) { ca.pop(); casing._head = false; }
     while (drawn < i) { drawn++; addTo(drawn); ca.push(L.latLng(ll[drawn])); }
-    const a = pts[i], b = pts[Math.min(i + 1, n - 1)];
+    const a = ll[i], b = ll[j];
     const head = L.latLng(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k);
     if (seg) { seg.addLatLng(head); seg._head = true; }
     ca.push(head); casing._head = true; casing.setLatLngs(ca);
     dot.setLatLng(head);
-    $('#replayChip').textContent = `${fmtKm(a[3] + (b[3] - a[3]) * k)} ק״מ · ${fmtDur(a[2] + (b[2] - a[2]) * k)}`;
+    const km = fmtKm(d[i] + (d[j] - d[i]) * k);
+    ui.chip.textContent = t ? `${km} ק״מ · ${fmtDur(t[i] + (t[j] - t[i]) * k)}` : `${km} ק״מ`;
     if (f < 1) RP.raf = requestAnimationFrame(frame);
     else RP.end = setTimeout(() => stopReplay(), 1800);
   };
   RP.raf = requestAnimationFrame(frame);
+}
+function runReplayData(r) {
+  return { ll: r.points.map((p) => [p[0], p[1]]), d: r.points.map((p) => p[3]), t: r.points.map((p) => p[2]), cols: paceColors(r) };
+}
+$('#btnReplay').onclick = () => {
+  if (RP.on && RP.ui && RP.ui.btn.id === 'btnReplay') { stopReplay(); return; }
+  const r = runs.find((x) => x.id === detailId);
+  if (!r || !r.points || r.points.length < 2) { toast('אין מספיק נקודות כדי לשחזר את המסלול'); return; }
+  startReplay('d', runReplayData(r));
+};
+// במסלול: אם יש ריצת שיא עם נתוני זמן, משחזרים אותה (עם צבעי קצב). אחרת את קו המסלול עצמו.
+$('#rBtnReplay').onclick = () => {
+  if (RP.on && RP.ui && RP.ui.btn.id === 'rBtnReplay') { stopReplay(); return; }
+  const rt = routes.find((x) => x.id === routeId);
+  if (!rt || !rt.points || rt.points.length < 2) { toast('אין מספיק נקודות כדי לשחזר את המסלול'); return; }
+  const pr = routePR(rt.id);
+  if (pr && pr.points && pr.points.length > 3 && pr.points[0].length >= 4) { startReplay('r', runReplayData(pr)); return; }
+  const ll = rt.points.map((p) => [p[0], p[1]]), d = [0];
+  for (let i = 1; i < ll.length; i++) d.push(d[i - 1] + hav(ll[i - 1], ll[i]));
+  startReplay('r', { ll, d, t: null, cols: ll.map(() => css('--plum')) });
 };
 
 /* ---------------- שיתוף סיכום הריצה ---------------- */

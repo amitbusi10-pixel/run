@@ -1,8 +1,8 @@
 // שמירת האפליקציה ואריחי המפה במטמון, כדי שתעבוד גם כשהקליטה חלשה
-const VERSION = 'v11';
+const VERSION = 'v12';
 const SHELL = `shell-${VERSION}`;
 const TILES = 'tiles-v1';
-const SHELL_FILES = ['./', 'index.html', 'styles.css?v=11', 'app.js?v=11', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
+const SHELL_FILES = ['./', 'index.html', 'styles.css?v=12', 'app.js?v=12', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'];
 
