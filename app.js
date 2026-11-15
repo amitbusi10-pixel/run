@@ -1386,25 +1386,37 @@ $('#btnQr').onclick = async () => {
 let installPrompt = null;
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const APK_URL = 'https://github.com/amitbusi10-pixel/run-android/releases/latest/download/al-haderech.apk';
+const isAndroid = /Android/.test(navigator.userAgent);
+let installMode = null;
 function showInstall(mode) {
-  if (isStandalone() || R.status !== 'idle') return;
-  if (Date.now() - LS.get('installDismissed', 0) < 3 * 864e5) return; // אחרי סגירה, לא מציגים שוב 3 ימים
+  if (NATIVE || R.status !== 'idle') return;
+  if (mode !== 'apk' && isStandalone()) return;
+  const key = mode === 'apk' ? 'apkDismissed' : 'installDismissed';
+  if (Date.now() - LS.get(key, 0) < 3 * 864e5) return; // אחרי סגירה, לא מציגים שוב 3 ימים
+  installMode = mode;
   const hint = $('#installHint'), btn = $('#btnInstall');
-  if (mode === 'prompt') { hint.textContent = 'ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן'; btn.hidden = false; }
+  $('#ibTitle').textContent = mode === 'apk' ? 'אפליקציית „על הדרך“ לאנדרואיד' : 'להוסיף את „על הדרך“ למסך הבית?';
+  btn.textContent = mode === 'apk' ? 'הורדה' : 'התקנה';
+  if (mode === 'apk') { hint.textContent = 'ממשיכה למדוד גם כשהמסך נעול'; btn.hidden = false; }
+  else if (mode === 'prompt') { hint.textContent = 'ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן'; btn.hidden = false; }
   else if (mode === 'ios') { hint.textContent = 'לוחצים על כפתור השיתוף ⬆ בתחתית Safari ובוחרים „הוספה למסך הבית“'; btn.hidden = true; }
   else { hint.textContent = 'בתפריט הדפדפן ⋮ בוחרים „התקנת אפליקציה“ או „הוספה למסך הבית“'; btn.hidden = true; }
   $('#installBar').hidden = false;
 }
 function hideInstall() { $('#installBar').hidden = true; }
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; showInstall('prompt'); });
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; if (!isAndroid) showInstall('prompt'); });
 window.addEventListener('appinstalled', () => { installPrompt = null; hideInstall(); toast('„על הדרך“ הותקנה. אפשר לפתוח אותה מהמסך הראשי'); });
+function downloadApk() { window.open(APK_URL, '_blank'); toast('ההורדה מתחילה. אחרי שהיא מסתיימת, פותחים את הקובץ ומאשרים התקנה', 6000); }
+$('#btnApk').onclick = downloadApk;
 $('#btnInstall').onclick = async () => {
+  if (installMode === 'apk') { hideInstall(); downloadApk(); return; }
   if (!installPrompt) return;
   installPrompt.prompt();
   await installPrompt.userChoice.catch(() => {});
   installPrompt = null; hideInstall();
 };
-$('#btnInstallX').onclick = () => { LS.set('installDismissed', Date.now()); hideInstall(); };
+$('#btnInstallX').onclick = () => { LS.set(installMode === 'apk' ? 'apkDismissed' : 'installDismissed', Date.now()); hideInstall(); };
 // צילום מסך לחלון ההתקנה (?shot): ריצה לדוגמה בראש העין, בלי שום שמירה
 async function demoShot() {
   S = Object.assign({}, S, { auto: false }); // רק בזיכרון, לא נשמר
@@ -1425,7 +1437,10 @@ async function demoShot() {
   setTimeout(() => { map.stop(); map.fitBounds(L.latLngBounds(wp), { padding: [50, 50], animate: false }); }, 1500);
 }
 function scheduleInstallHint() {
-  if (NATIVE || isStandalone() || /[?&]shot\b/.test(location.search)) return;
+  $('#apkCard').hidden = NATIVE || !isAndroid;
+  if (NATIVE || /[?&]shot\b/.test(location.search)) return;
+  if (isAndroid) { setTimeout(() => showInstall('apk'), 1500); return; }
+  if (isStandalone()) return;
   if (isIOS) setTimeout(() => showInstall('ios'), 1500);
   else setTimeout(() => { if (!installPrompt && /Android/.test(navigator.userAgent)) showInstall('manual'); }, 5000);
 }
