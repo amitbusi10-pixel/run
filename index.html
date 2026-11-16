@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&family=Barlow+Condensed:wght@500;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="styles.css?v=12">
+<link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
 <div id="app">
@@ -243,6 +243,19 @@
   <section class="view" id="view-settings" hidden>
     <header class="vhead"><h1>הגדרות</h1></header>
     <form id="settingsForm" class="form">
+      <div class="card" id="accCard">
+        <h2>החשבון שלי</h2>
+        <div id="accOut">
+          <p class="muted">נכנסים עם Google, והריצות, המסלולים וההגדרות נשמרים בענן. כל אחד רואה רק את שלו, והכול חוזר גם בטלפון חדש או באפליקציה אחרת.</p>
+          <button type="button" class="g-btn" id="btnSignIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.2c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-1.9 3.3-4.8 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 0 1 0-4.3V7H2.1a11 11 0 0 0 0 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 0 0 2.1 7l3.7 2.9C6.7 7.3 9.1 5.4 12 5.4z"/></svg>כניסה עם Google</button>
+        </div>
+        <div id="accIn" hidden>
+          <div class="acc-row"><span class="acc-av" id="accAvatar"></span><div><b id="accName"></b><span class="acc-mail" id="accEmail" dir="ltr"></span></div></div>
+          <p class="acc-status" id="accStatus"></p>
+          <button type="button" class="btn small" id="btnSignOut">יציאה מהחשבון</button>
+        </div>
+      </div>
+
       <div class="card">
         <h2>מטרת הקצב בריצה חופשית</h2>
         <div class="row2">
@@ -330,6 +343,15 @@
     <button data-v="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4L10.7 6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.7h4l.3-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>הגדרות</span></button>
   </nav>
   <div class="toast" id="toast" hidden></div>
+  <div class="sheet-back" id="authSheet" hidden>
+    <div class="sheet" role="dialog" aria-label="שמירה בענן">
+      <b>לשמור את הריצות שלך בענן?</b>
+      <p>נכנסים עם Google, וכל הריצות והמסלולים נשמרים גם אם מחליפים טלפון. רק אתה רואה אותם.</p>
+      <button type="button" class="g-btn" id="authYes"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.2c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-1.9 3.3-4.8 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 0 1 0-4.3V7H2.1a11 11 0 0 0 0 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 0 0 2.1 7l3.7 2.9C6.7 7.3 9.1 5.4 12 5.4z"/></svg>כניסה עם Google</button>
+      <button type="button" class="btn" id="authNo">לא עכשיו</button>
+      <span class="sheet-note">אפשר להיכנס גם אחר כך, במסך ההגדרות.</span>
+    </div>
+  </div>
   <div class="install-bar" id="installBar" role="dialog" aria-label="התקנת האפליקציה" hidden>
     <img src="icon-192.png" alt="" width="44" height="44">
     <div class="ib-text"><b id="ibTitle">להוסיף את „על הדרך“ למסך הבית?</b><span id="installHint">ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן</span></div>
@@ -339,6 +361,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=12"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
