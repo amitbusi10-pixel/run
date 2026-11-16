@@ -896,6 +896,8 @@ function restoreActive() {
         R.elapsed += (Date.now() - a.saved) / 1000;
         R.status = 'running'; R.lastTick = Date.now(); R.lastMove = Date.now();
       }
+      // קודם כל הנקודות שהשירות שמר בזמן שהאפליקציה הייתה סגורה, ורק אחר כך נקודות חדשות
+      try { const r = await RT.getSince({ time: lastFixTs }); (r.points || []).forEach(feedNative); } catch (e) { /* */ }
       await nativeTrackStart();
       await syncMissed();
       renderControls(); renderRun(); updateLive(true);
