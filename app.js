@@ -117,7 +117,11 @@ function bestEffort(points, len) {
 /* ---------------- אחסון ---------------- */
 const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  set(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return false; }
+    if ((k === 'settings' || k === 'plan' || k === 'goalKm') && window.__cloudMeta) window.__cloudMeta(); // גם לענן, אם נכנסו לחשבון
+    return true;
+  },
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* */ } },
 };
 const DB = (() => {
@@ -169,23 +173,28 @@ async function loadData() {
   }
   runs.sort((a, b) => b.start - a.start);
 }
-async function saveRun(r) {
+// fromCloud: השינוי הגיע מהענן, אז לא שולחים אותו בחזרה
+async function saveRun(r, fromCloud) {
   const i = runs.findIndex((x) => x.id === r.id);
   if (i >= 0) runs[i] = r; else { runs.push(r); runs.sort((a, b) => b.start - a.start); }
   try { await DB.put('runs', r); } catch (e) { LS.set('runs-fallback', runs); }
+  if (!fromCloud) cloudPut('runs', r);
 }
-async function deleteRun(id) {
+async function deleteRun(id, fromCloud) {
   runs = runs.filter((r) => r.id !== id);
   try { await DB.del('runs', id); } catch (e) { LS.set('runs-fallback', runs); }
+  if (!fromCloud) cloudDel('runs', id);
 }
-async function saveRoute(rt) {
+async function saveRoute(rt, fromCloud) {
   const i = routes.findIndex((x) => x.id === rt.id);
   if (i >= 0) routes[i] = rt; else routes.push(rt);
   try { await DB.put('routes', rt); } catch (e) { LS.set('routes-fallback', routes); }
+  if (!fromCloud) cloudPut('routes', rt);
 }
-async function deleteRoute(id) {
+async function deleteRoute(id, fromCloud) {
   routes = routes.filter((r) => r.id !== id);
   try { await DB.del('routes', id); } catch (e) { LS.set('routes-fallback', routes); }
+  if (!fromCloud) cloudDel('routes', id);
   for (const r of runs.filter((x) => x.routeId === id)) { r.routeId = null; await saveRun(r); }
 }
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -1727,6 +1736,161 @@ $('#btnShareRun').onclick = async () => {
   } catch (e) { if (e && e.name !== 'AbortError' && !/cancel/i.test(e.message || '')) toast('השיתוף לא הצליח. אפשר להשתמש ב„העתק סיכום“ בתחתית המסך'); }
 };
 
+/* ---------------- חשבון וסנכרון בענן (Firebase) ---------------- */
+// כל משתמש שומר רק אצלו: users/{uid}/runs, users/{uid}/routes, והגדרות במסמך users/{uid}.
+// כלל האבטחה ב־Firestore מאפשר לכל משתמש לקרוא ולכתוב רק את המסמכים שלו.
+const FB_CONFIG = {
+  apiKey: 'AIzaSyDKRbZhj1faVEmFTStDkaVGzSCWSnI5BhM',
+  authDomain: 'al-haderech-f33d8.firebaseapp.com',
+  projectId: 'al-haderech-f33d8',
+  storageBucket: 'al-haderech-f33d8.firebasestorage.app',
+  messagingSenderId: '338596621840',
+  appId: '1:338596621840:web:f1096c562ccad347d56495',
+};
+const GOOGLE_WEB_CLIENT_ID = '338596621840-cme577vn4bgehpsqe26gikrr6ng0ebj3.apps.googleusercontent.com';
+const FB_V = '13.3.0';
+const GA = plug('GoogleAuth'); // כניסה עם Google בתוך אפליקציית האנדרואיד
+const cloud = { ready: false, user: null, fb: null, db: null, auth: null, syncing: false, lastSync: 0, error: '' };
+
+async function cloudInit() {
+  if (cloud.fb) return cloud.fb;
+  const base = `https://www.gstatic.com/firebasejs/${FB_V}/`;
+  const [appM, authM, fsM] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+  const app = appM.initializeApp(FB_CONFIG);
+  cloud.auth = authM.getAuth(app);
+  try { cloud.db = fsM.initializeFirestore(app, { localCache: fsM.persistentLocalCache() }); } catch (e) { cloud.db = fsM.getFirestore(app); }
+  cloud.fb = { authM, fsM };
+  authM.onAuthStateChanged(cloud.auth, (u) => {
+    cloud.user = u; cloud.ready = true;
+    LS.set('cloudUser', !!u); LS.del('cloudPending');
+    renderAccount();
+    if (u) cloudSync();
+  });
+  return cloud.fb;
+}
+const userRef = (...p) => cloud.fb.fsM.doc(cloud.db, 'users', cloud.user.uid, ...p);
+const userCol = (name) => cloud.fb.fsM.collection(cloud.db, 'users', cloud.user.uid, name);
+// Firestore לא שומר מערך בתוך מערך, אז את הנקודות שומרים כטקסט
+const toDoc = (o) => { const d = Object.assign({}, o, { pointsJson: JSON.stringify(o.points || []), updated: Date.now() }); delete d.points; return d; };
+const fromDoc = (d) => { const o = Object.assign({}, d); try { o.points = JSON.parse(d.pointsJson || '[]'); } catch (e) { o.points = []; } delete o.pointsJson; delete o.updated; return o; };
+
+async function cloudSignIn() {
+  try {
+    const { authM } = await cloudInit();
+    if (GA) {
+      const r = await GA.signIn({ clientId: GOOGLE_WEB_CLIENT_ID });
+      await authM.signInWithCredential(cloud.auth, authM.GoogleAuthProvider.credential(r.idToken));
+    } else {
+      const provider = new authM.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      try { await authM.signInWithPopup(cloud.auth, provider); }
+      catch (e) {
+        if (e && /popup-blocked/.test(e.code || '')) { toast('הדפדפן חסם את חלון הכניסה של Google. כדאי לאשר חלונות קופצים לאתר ולנסות שוב', 6000); return; }
+        throw e;
+      }
+    }
+    LS.set('authAsked', true);
+  } catch (e) {
+    const code = (e && (e.code || e.message)) || '';
+    if (!/cancel|closed-by-user|popup-closed|16:|canceled/i.test(code)) toast('הכניסה לא הצליחה. כדאי לבדוק את החיבור לאינטרנט ולנסות שוב');
+  }
+}
+async function cloudSignOut() {
+  try {
+    const { authM } = await cloudInit();
+    await authM.signOut(cloud.auth);
+    if (GA) GA.signOut().catch(() => {});
+    toast('יצאת מהחשבון. הריצות נשארו גם בטלפון');
+  } catch (e) { /* */ }
+}
+
+// סנכרון מלא: מה שיש רק בענן יורד לטלפון, ומה שיש רק בטלפון עולה לענן. מחיקה מסומנת, כדי שלא תחזור.
+async function cloudSync() {
+  if (!cloud.user || cloud.syncing) return;
+  cloud.syncing = true; cloud.error = ''; renderAccount();
+  const { fsM } = cloud.fb;
+  try {
+    for (const kind of ['runs', 'routes']) {
+      const snap = await fsM.getDocs(userCol(kind));
+      const remote = new Map();
+      snap.forEach((d) => remote.set(d.id, d.data()));
+      const local = kind === 'runs' ? runs : routes;
+      for (const [id, d] of remote) {
+        const have = local.find((x) => x.id === id);
+        if (d.deleted) { if (have) { if (kind === 'runs') await deleteRun(id, true); else await deleteRoute(id, true); } continue; }
+        if (!have) { const o = fromDoc(d); if (kind === 'runs') await saveRun(o, true); else await saveRoute(o, true); }
+      }
+      for (const o of local.slice()) if (!remote.has(o.id)) await fsM.setDoc(fsM.doc(userCol(kind), o.id), toDoc(o));
+    }
+    // הגדרות, תוכנית ויעד: הגרסה החדשה יותר מנצחת
+    const meta = await fsM.getDoc(userRef());
+    const m = meta.exists() ? meta.data() : null;
+    if (m && (m.updated || 0) > LS.get('metaUpdated', 0)) {
+      if (m.settings) { S = Object.assign({}, DEFAULTS, m.settings); localStorage.setItem('settings', JSON.stringify(S)); fillSettings(); }
+      if ('plan' in m) { plan = m.plan || null; localStorage.setItem('plan', JSON.stringify(plan)); }
+      if (m.goalKm) localStorage.setItem('goalKm', JSON.stringify(m.goalKm));
+      localStorage.setItem('metaUpdated', JSON.stringify(m.updated));
+    } else await cloudPushMeta();
+    cloud.lastSync = Date.now();
+    renderRun(); if (currentView === 'history') renderHistory(); if (currentView === 'routes') renderRoutes(); if (currentView === 'plan') renderPlan();
+  } catch (e) {
+    cloud.error = 'הסנכרון לא הושלם. ננסה שוב בפתיחה הבאה';
+  }
+  cloud.syncing = false; renderAccount();
+}
+async function cloudPushMeta() {
+  if (!cloud.user) return;
+  const updated = Date.now();
+  localStorage.setItem('metaUpdated', JSON.stringify(updated));
+  try { await cloud.fb.fsM.setDoc(userRef(), { settings: S, plan: plan || null, goalKm: LS.get('goalKm', 5), updated }); } catch (e) { /* ייכתב כשיחזור החיבור */ }
+}
+let metaTimer = 0;
+window.__cloudMeta = () => { if (!cloud.user) return; clearTimeout(metaTimer); metaTimer = setTimeout(cloudPushMeta, 1500); };
+function cloudPut(kind, o) {
+  if (!cloud.user) return;
+  const { fsM } = cloud.fb;
+  fsM.setDoc(fsM.doc(userCol(kind), o.id), toDoc(o)).catch(() => {});
+}
+function cloudDel(kind, id) {
+  if (!cloud.user) return;
+  const { fsM } = cloud.fb;
+  fsM.setDoc(fsM.doc(userCol(kind), id), { deleted: true, updated: Date.now() }).catch(() => {});
+}
+
+// כרטיס החשבון במסך ההגדרות
+function renderAccount() {
+  const out = $('#accOut'), inn = $('#accIn');
+  if (!out) return;
+  const u = cloud.user;
+  out.hidden = !!u; inn.hidden = !u;
+  if (!u) return;
+  $('#accName').textContent = u.displayName || 'החשבון שלי';
+  $('#accEmail').textContent = u.email || '';
+  const av = $('#accAvatar');
+  if (u.photoURL) { av.style.backgroundImage = `url("${u.photoURL}")`; av.textContent = ''; }
+  else { av.style.backgroundImage = ''; av.textContent = (u.displayName || u.email || '?').trim().charAt(0); }
+  const st = $('#accStatus');
+  st.classList.toggle('bad', !!cloud.error);
+  st.textContent = cloud.error || (cloud.syncing ? 'מסנכרן…' : `מסונכרן · ${runs.length} ריצות, ${routes.length} מסלולים`);
+}
+$('#btnSignIn').onclick = cloudSignIn;
+$('#btnSignOut').onclick = cloudSignOut;
+$('#authYes').onclick = () => { $('#authSheet').hidden = true; cloudSignIn(); };
+$('#authNo').onclick = () => { $('#authSheet').hidden = true; LS.set('authAsked', true); };
+// בפתיחה הראשונה: הצעה להיכנס, פעם אחת בלבד
+function scheduleAuthPrompt() {
+  if (LS.get('authAsked', false) || /[?&]shot\b/.test(location.search)) return;
+  setTimeout(() => {
+    if (cloud.user || R.status !== 'idle' || LS.get('authAsked', false)) return;
+    if (!$('#installBar').hidden) { setTimeout(scheduleAuthPrompt, 15000); return; }
+    $('#authSheet').hidden = false;
+  }, 4000);
+}
+// מתחברים לענן רק אם כבר נכנסו בעבר, כדי לא להאט את הפתיחה של מי שלא משתמש בזה
+function startCloud() {
+  if (LS.get('cloudUser', false) || LS.get('cloudPending', false)) cloudInit().catch(() => {});
+}
+
 /* ---------------- חיבור כפתורים ---------------- */
 $('#btnStart').onclick = startRun;
 $('#btnPause').onclick = pauseRun;
@@ -1766,6 +1930,7 @@ document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => sho
   renderControls(); renderContext(); renderRun();
   tickTimer = setInterval(tick, 250);
   scheduleInstallHint();
+  startCloud(); renderAccount(); scheduleAuthPrompt();
   if (/[?&]shot\b/.test(location.search)) { setTimeout(demoShot, 800); return; }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
