@@ -1644,7 +1644,7 @@ function playReplay(which, pts, cols) {
   };
   const frame = (now) => {
     if (!P.on) return;
-    const f = Math.min(1, (now - t0) / dur);
+    const f = Math.max(0, Math.min(1, (now - t0) / dur)); // הפריים הראשון יכול להגיע עם זמן קצת לפני t0
     const pos = f * (n - 1), i = Math.min(Math.floor(pos), n - 1), k = pos - i;
     if (seg && seg._head) { const a = seg.getLatLngs(); a.pop(); seg.setLatLngs(a); seg._head = false; }
     const ca = casing.getLatLngs(); if (casing._head) { ca.pop(); casing._head = false; }
