@@ -790,6 +790,7 @@ function countdown() {
     }, 1000);
   });
 }
+let runStarting = false;
 async function startRun(opts) {
   if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
     try { await DeviceMotionEvent.requestPermission(); } catch (e) { /* */ }
@@ -797,8 +798,10 @@ async function startRun(opts) {
   if (NATIVE) nativeTrackStart(); else startGps();
   requestWake();
   hideInstall();
+  runStarting = true; $('#authSheet').hidden = true; // לא מקפיצים את חלון הענן באמצע ריצה
   const goal = planRun() ? 0 : LS.get('goalKm', 5);
   if (!(opts && opts.quick)) await countdown();
+  runStarting = false; $('#authSheet').hidden = true;
   Object.assign(R, {
     goal, goalHit: false, bridged: 0,
     status: 'running', autoPaused: false, start: Date.now(), elapsed: 0, lastTick: Date.now(), elapsedAtMove: 0, lastMove: Date.now(),
@@ -1892,7 +1895,7 @@ $('#authNo').onclick = () => { $('#authSheet').hidden = true; LS.set('authAsked'
 function scheduleAuthPrompt() {
   if (LS.get('authAsked', false) || /[?&]shot\b/.test(location.search)) return;
   setTimeout(() => {
-    if (cloud.user || R.status !== 'idle' || LS.get('authAsked', false)) return;
+    if (cloud.user || R.status !== 'idle' || runStarting || LS.get('authAsked', false)) return;
     if (!$('#installBar').hidden) { setTimeout(scheduleAuthPrompt, 15000); return; }
     $('#authSheet').hidden = false;
   }, 4000);
