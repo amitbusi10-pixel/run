@@ -171,8 +171,14 @@ async function loadData() {
     runs = LS.get('runs-fallback', []);
     routes = LS.get('routes-fallback', []);
   }
+  // עותק נוסף של המסלולים השמורים: אם הדפדפן מחק את מסד הנתונים, הם חוזרים מכאן
+  const gone = LS.get('routes-gone', []);
+  for (const rt of LS.get('routes-copy', [])) if (!routes.some((x) => x.id === rt.id) && !gone.includes(rt.id)) { routes.push(rt); DB.put('routes', rt).catch(() => {}); }
+  copyRoutes();
   runs.sort((a, b) => b.start - a.start);
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* */ } // מבקש מהדפדפן לא למחוק את הנתונים
 }
+function copyRoutes() { LS.set('routes-copy', routes); }
 // fromCloud: השינוי הגיע מהענן, אז לא שולחים אותו בחזרה
 async function saveRun(r, fromCloud) {
   const i = runs.findIndex((x) => x.id === r.id);
@@ -190,11 +196,13 @@ async function saveRoute(rt, fromCloud) {
   if (i >= 0) routes[i] = rt; else routes.push(rt);
   try { await DB.put('routes', rt); } catch (e) { LS.set('routes-fallback', routes); }
   if (!fromCloud) cloudPut('routes', rt);
+  copyRoutes();
 }
 async function deleteRoute(id, fromCloud) {
   routes = routes.filter((r) => r.id !== id);
   try { await DB.del('routes', id); } catch (e) { LS.set('routes-fallback', routes); }
   if (!fromCloud) cloudDel('routes', id);
+  copyRoutes(); LS.set('routes-gone', LS.get('routes-gone', []).concat(id).slice(-200));
   for (const r of runs.filter((x) => x.routeId === id)) { r.routeId = null; await saveRun(r); }
 }
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -396,11 +404,13 @@ async function nativeTrackStart() {
         RT.addListener('location', feedNative);
         RT.addListener('action', (a) => { if (a.action === 'pause' && R.status === 'running') pauseRun(); else if (a.action === 'resume' && R.status === 'paused') resumeRun(); });
       }
-      await RT.start({ goal: (R.goal || LS.get('goalKm', 5)) * 1000, title: 'על הדרך', text: 'הריצה מתחילה' });
+      await RT.start({ goal: (R.goal || LS.get('goalKm', 5)) * 1000, title: '0.00 ק״מ', text: 'הריצה התחילה' });
       trackOn = true;
       askBatteryOnce();
     } else if (BG) {
-      bgWatch = await BG.addWatcher({ backgroundTitle: 'על הדרך: ריצה פעילה', backgroundMessage: 'הזמן והמרחק נמדדים גם כשהמסך כבוי', requestPermissions: true, stale: false, distanceFilter: 0 },
+      // גרסה ישנה של האפליקציה: התראה אחת קבועה בלבד. עדכון חי בה הקפיץ אותה מחדש כל פעם
+      if (LN) LN.cancel({ notifications: [{ id: LIVE_ID }] }).catch(() => {});
+      bgWatch = await BG.addWatcher({ backgroundTitle: 'הריצה התחילה', backgroundMessage: 'הזמן והמרחק נמדדים גם כשהמסך כבוי', requestPermissions: true, stale: false, distanceFilter: 0 },
         (loc, err) => { if (!err && loc) feedNative(loc); });
       trackOn = true;
     }
@@ -429,21 +439,16 @@ async function askBatteryOnce() {
     if (window.confirm('כדי שהמדידה לא תיעצר כשהמסך כבוי, כדאי לאשר לאפליקציה לפעול ברקע בלי הגבלת סוללה. לפתוח את האישור?')) await RT.requestBatteryExemption();
   } catch (e) { /* */ }
 }
-// ההתראה במסך הנעילה. השעון רץ בה לבד; את המרחק והקצב מעדכנים כל 2 שניות, באותה התראה.
+// ההתראה במסך הנעילה: מרחק, ושעון שהטלפון מריץ לבד. היא משתנה רק כשהמרחק משתנה, באותה התראה, בלי לקפוץ.
 function updateLive(force) {
-  if (!trackOn || R.status === 'idle') return;
+  if (!trackOn || R.status === 'idle' || !RT) return; // בגרסה הישנה של האפליקציה אין עדכונים חיים
   const now = Date.now();
   if (!force && now - liveLast < 2000) return;
   liveLast = now;
-  const avg = R.dist > 50 ? R.elapsed / (R.dist / 1000) : NaN;
-  const title = `${fmtKm(R.dist)} ק״מ` + (isFinite(avg) ? ` · ${fmtPace(avg)} לק״מ` : '');
-  let text = R.status === 'paused' ? `הריצה בהשהיה · ${fmtClock(R.elapsed)}` : (isFinite(avg) ? `${kmh(avg)} קמ״ש` : 'הריצה התחילה');
+  const title = `${fmtKm(R.dist)} ק״מ`;
+  let text = R.status === 'paused' ? `הריצה בהשהיה · ${fmtClock(R.elapsed)}` : 'הריצה התחילה';
   if (R.goal) text += R.goalHit ? ' · הגעת ליעד ✓' : ` · נשארו ${fmtKm(Math.max(0, R.goal * 1000 - R.dist))} ק״מ ליעד`;
-  if (RT) {
-    RT.update({ title, text, chip: `${fmtKm(R.dist, 1)} ק״מ`, elapsedMs: R.elapsed * 1000, paused: R.status === 'paused', dist: R.dist, goal: (R.goal || 0) * 1000 }).catch(() => {});
-  } else if (LN) {
-    LN.schedule({ notifications: [{ id: LIVE_ID, title: `${title} · ${fmtClock(R.elapsed)}`, body: text, channelId: 'run-live', ongoing: true, autoCancel: false, smallIcon: 'ic_tracking', iconColor: '#ff7a45', isExactNotification: false }] }).catch(() => {});
-  }
+  RT.update({ title, text, chip: `${fmtKm(R.dist, 1)} ק״מ`, elapsedMs: R.elapsed * 1000, paused: R.status === 'paused', dist: R.dist, goal: (R.goal || 0) * 1000 }).catch(() => {});
 }
 // שיתוף ושמירת קבצים בתוך האפליקציה (הדפדפן הפנימי לא תומך בשיתוף רגיל)
 function blobToBase64(blob) {
@@ -1443,15 +1448,16 @@ const APK_URL = 'https://github.com/amitbusi10-pixel/run-android/releases/latest
 const isAndroid = /Android/.test(navigator.userAgent);
 let installMode = null;
 function showInstall(mode) {
-  if (NATIVE || R.status !== 'idle') return;
+  if ((NATIVE && mode !== 'update') || R.status !== 'idle') return;
   if (mode !== 'apk' && isStandalone()) return;
-  const key = mode === 'apk' ? 'apkDismissed' : 'installDismissed';
-  if (Date.now() - LS.get(key, 0) < 3 * 864e5) return; // אחרי סגירה, לא מציגים שוב 3 ימים
+  const key = mode === 'update' ? 'updateDismissed' : mode === 'apk' ? 'apkDismissed' : 'installDismissed';
+  if (Date.now() - LS.get(key, 0) < (mode === 'update' ? 864e5 : 3 * 864e5)) return; // אחרי סגירה, לא מציגים שוב 3 ימים
   installMode = mode;
   const hint = $('#installHint'), btn = $('#btnInstall');
-  $('#ibTitle').textContent = mode === 'apk' ? 'אפליקציית „על הדרך“ לאנדרואיד' : 'להוסיף את „על הדרך“ למסך הבית?';
-  btn.textContent = mode === 'apk' ? 'הורדה' : 'התקנה';
-  if (mode === 'apk') { hint.textContent = 'ממשיכה למדוד גם כשהמסך נעול'; btn.hidden = false; }
+  $('#ibTitle').textContent = mode === 'update' ? 'יש גרסה חדשה של „על הדרך“' : mode === 'apk' ? 'אפליקציית „על הדרך“ לאנדרואיד' : 'להוסיף את „על הדרך“ למסך הבית?';
+  btn.textContent = mode === 'update' ? 'עדכון' : mode === 'apk' ? 'הורדה' : 'התקנה';
+  if (mode === 'update') { hint.textContent = 'התראה קבועה במסך הנעילה עם הזמן והמרחק'; btn.hidden = false; }
+  else if (mode === 'apk') { hint.textContent = 'ממשיכה למדוד גם כשהמסך נעול'; btn.hidden = false; }
   else if (mode === 'prompt') { hint.textContent = 'ככה היא תיפתח כמו כל אפליקציה, במסך מלא ובלי דפדפן'; btn.hidden = false; }
   else if (mode === 'ios') { hint.textContent = 'לוחצים על כפתור השיתוף ⬆ בתחתית Safari ובוחרים „הוספה למסך הבית“'; btn.hidden = true; }
   else { hint.textContent = 'בתפריט הדפדפן ⋮ בוחרים „התקנת אפליקציה“ או „הוספה למסך הבית“'; btn.hidden = true; }
@@ -1460,16 +1466,18 @@ function showInstall(mode) {
 function hideInstall() { $('#installBar').hidden = true; }
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; if (!isAndroid) showInstall('prompt'); });
 window.addEventListener('appinstalled', () => { installPrompt = null; hideInstall(); toast('„על הדרך“ הותקנה. אפשר לפתוח אותה מהמסך הראשי'); });
-function downloadApk() { window.open(APK_URL, '_blank'); toast('ההורדה מתחילה. אחרי שהיא מסתיימת, פותחים את הקובץ ומאשרים התקנה', 6000); }
+function downloadApk() {
+  if (NATIVE) location.href = APK_URL; // בתוך האפליקציה: הקישור נפתח בדפדפן של הטלפון, ושם ההורדה מתחילה
+  else window.open(APK_URL, '_blank'); toast('ההורדה מתחילה. אחרי שהיא מסתיימת, פותחים את הקובץ ומאשרים התקנה', 6000); }
 $('#btnApk').onclick = downloadApk;
 $('#btnInstall').onclick = async () => {
-  if (installMode === 'apk') { hideInstall(); downloadApk(); return; }
+  if (installMode === 'apk' || installMode === 'update') { hideInstall(); downloadApk(); return; }
   if (!installPrompt) return;
   installPrompt.prompt();
   await installPrompt.userChoice.catch(() => {});
   installPrompt = null; hideInstall();
 };
-$('#btnInstallX').onclick = () => { LS.set(installMode === 'apk' ? 'apkDismissed' : 'installDismissed', Date.now()); hideInstall(); };
+$('#btnInstallX').onclick = () => { LS.set(installMode === 'update' ? 'updateDismissed' : installMode === 'apk' ? 'apkDismissed' : 'installDismissed', Date.now()); hideInstall(); };
 // צילום מסך לחלון ההתקנה (?shot): ריצה לדוגמה בראש העין, בלי שום שמירה
 async function demoShot() {
   S = Object.assign({}, S, { auto: false }); // רק בזיכרון, לא נשמר
@@ -1491,6 +1499,7 @@ async function demoShot() {
 }
 function scheduleInstallHint() {
   $('#apkCard').hidden = NATIVE || !isAndroid;
+  if (NATIVE && !RT) { setTimeout(() => showInstall('update'), 1500); return; } // גרסה ישנה של האפליקציה
   if (NATIVE || /[?&]shot\b/.test(location.search)) return;
   if (isAndroid) { setTimeout(() => showInstall('apk'), 1500); return; }
   if (isStandalone()) return;
