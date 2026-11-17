@@ -1,0 +1,23 @@
+// שומר את החוברת במטמון כדי שתיפתח גם בלי אינטרנט. עדכונים מגיעים מהרשת כשיש חיבור.
+const VERSION = 'e1';
+const CACHE = `english-${VERSION}`;
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('english-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = req.url;
+  const own = url.startsWith(self.registration.scope);
+  if (!own && !url.includes('fonts.g')) return;
+  // קודם רשת (לקבל עדכונים), ואם אין רשת: מהמטמון
+  e.respondWith(fetch(own ? new Request(req, { cache: 'no-cache' }) : req).then((res) => {
+    if (res.ok || res.type === 'opaque') { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+    return res;
+  }).catch(() => caches.match(req, { ignoreSearch: own }).then((hit) => hit || caches.match('index.html'))));
+});

@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>אנגלית מהבסיס</title>
+<meta name="theme-color" content="#1b3fa8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap">
+<style>
+/* Layout: school-workbook look. White paper, black ink, blue pen for headings, red pen for corrections.
+   Desktop: centered 940px sheet under a tab bar of the six unit stages. Phone: same, stacked. Single light theme by choice. */
+:root{
+  --paper:#ffffff; --ink:#1b1b1b; --muted:#555555; --rule:#c9c9c9; --rule-strong:#222222;
+  --pen:#1b3fa8; --pen-soft:#eef2fc; --red:#c4251c; --red-soft:#fdecea; --green:#1d7a3a; --green-soft:#e8f5ec;
+  --hl:#fff6c9; --font:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif; color-scheme:light;
+}
+*{box-sizing:border-box}
+html{direction:rtl;background:var(--paper)}
+body{background:var(--paper);color:var(--ink);font-family:var(--font);font-size:18px;line-height:1.7;margin:0;
+  padding-block:0 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--paper);z-index:20}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:19;background:var(--paper);border-bottom:2px solid var(--rule-strong);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px;max-width:980px;margin:0 auto}
+.brand{font-weight:800;font-size:20px;color:var(--pen)}
+.homebtn{border:1.5px solid var(--rule-strong);background:var(--paper);padding:6px 14px;border-radius:4px;font-weight:500}
+.homebtn:hover{background:var(--pen-soft)}
+.wrap{max-width:980px;margin:0 auto}
+.tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid var(--rule-strong);margin-top:14px}
+.tab{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border:1.5px solid var(--rule);border-bottom:0;background:#f3f3f3;margin-inline-end:-1.5px;font-size:16px;font-weight:500;border-radius:6px 6px 0 0}
+.tab:hover{background:var(--pen-soft)}
+.tab.on{background:var(--paper);border-color:var(--rule-strong);font-weight:800;color:var(--pen);position:relative;top:2px;border-bottom:2px solid var(--paper)}
+.tn{display:inline-grid;place-items:center;width:22px;height:22px;border:1.5px solid currentColor;border-radius:50%;font-size:13px;font-weight:700;flex:none}
+.tick{color:var(--green);font-weight:800}
+.sheet{background:var(--paper);border:1.5px solid var(--rule);border-top:0;padding:28px clamp(16px,4vw,48px) 36px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.ubadge{align-self:flex-start;border:2px solid var(--pen);color:var(--pen);font-weight:800;padding:0 12px;border-radius:4px;font-size:15px}
+.utitle{font-size:clamp(26px,4vw,36px);margin:0;line-height:1.25;text-wrap:balance}
+.usub{color:var(--muted);margin-top:-14px;text-align:left;font-weight:500}
+h2{font-size:25px;color:var(--pen);margin:0;padding-bottom:6px;border-bottom:3px double var(--pen);text-wrap:balance}
+h3{font-size:19px;margin:6px 0 0;color:var(--ink)}
+p{margin:0}
+ul{margin:0;padding-inline-start:24px;display:flex;flex-direction:column;gap:6px}
+.lead{color:var(--muted)}
+.page{display:flex;flex-direction:column;gap:16px}
+.ex{display:flex;align-items:center;gap:12px;border-bottom:1px dotted #999;padding:6px 2px}
+.ex .two{display:flex;flex-direction:column;flex:1;min-width:0}
+.en{direction:ltr;text-align:left;font-weight:700;color:var(--pen);font-size:19px;min-width:0}
+.he{color:var(--muted);font-size:16px}
+.spk{flex:none;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--pen);background:var(--paper);display:grid;place-items:center;color:var(--pen)}
+.spk:hover{background:var(--pen-soft)}
+.spk svg{width:19px;height:19px}
+.note,.warnbox{padding:10px 16px;border:1.5px solid var(--pen);background:var(--pen-soft);border-radius:4px}
+.warnbox{border-color:var(--red);background:var(--red-soft)}
+.note>b:first-child,.warnbox>b:first-child{margin-inline-end:4px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border:1.5px solid var(--rule-strong);padding:6px 12px;text-align:start;font-size:17px}
+th{background:var(--pen-soft);color:var(--pen)}
+td.l{direction:ltr;text-align:left;font-weight:700}
+.pager{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pg{min-width:40px;padding:4px 12px;border:1.5px solid var(--rule-strong);background:var(--paper);border-radius:4px;font-weight:500}
+.pg.on{background:var(--pen);color:#fff;border-color:var(--pen);font-weight:700}
+.pg .sc{font-size:13px;margin-inline-start:6px}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px 26px;border-radius:4px;border:2px solid var(--pen);background:var(--pen);color:#fff;font-weight:700}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:var(--paper);color:var(--pen)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:0 28px}
+.vitem{display:flex;align-items:center;gap:10px;border-bottom:1px dotted #999;padding:6px 2px}
+.vitem .en{flex:1}.vitem .he{flex:1;min-width:0}
+.qhead{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:15px}
+.bar{height:8px;border:1.5px solid var(--rule-strong);border-radius:99px;overflow:hidden;background:var(--paper)}
+.bar>i{display:block;height:100%;background:var(--pen)}
+.qp{font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap;text-wrap:balance}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px}
+.opt{min-height:52px;padding:10px 14px;border-radius:4px;border:1.5px solid var(--rule-strong);background:var(--paper);text-align:center;font-weight:500}
+.opt:hover:not([disabled]){background:var(--pen-soft)}
+.opt.picked{background:var(--pen-soft);border-color:var(--pen);border-width:2.5px}
+.opt.right{background:var(--green-soft);border-color:var(--green);color:var(--green);font-weight:700}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.fb{padding:10px 14px;border-radius:4px;border:1.5px solid}
+.fb.ok{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.fb.no{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.score{font-size:72px;font-weight:800;line-height:1;text-align:center}
+.score.ok{color:var(--green)}.score.no{color:var(--red)}
+.center{text-align:center}
+.rev{border:1.5px solid var(--rule);padding:10px 14px;display:flex;flex-direction:column;gap:4px;border-radius:4px}
+.sub{color:var(--muted);font-size:16px}
+.ltr{direction:ltr;text-align:left}
+/* homework sheet */
+.hwhead{border:2px solid var(--rule-strong);padding:10px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-weight:700}
+.items{display:flex;flex-direction:column;gap:2px}
+.item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.item .n{flex:none;min-width:30px;font-weight:800;color:var(--pen)}
+.item .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.q{font-size:19px}
+input.blank{font:inherit;font-weight:700;color:var(--pen);direction:ltr;text-align:center;border:0;border-bottom:2px solid var(--rule-strong);background:var(--hl);border-radius:2px 2px 0 0;width:min(100%,11ch);min-width:5ch;padding:0 6px;margin-inline:6px}
+input.full,textarea.full{font:inherit;font-weight:500;color:var(--pen);direction:ltr;text-align:left;width:100%;border:0;border-bottom:2px solid var(--rule-strong);background:var(--hl);padding:6px 8px;border-radius:2px 2px 0 0}
+textarea.full{min-height:110px;resize:vertical;line-height:2;background:repeating-linear-gradient(var(--paper) 0 35px,#bbb 35px 36px);border:1.5px solid var(--rule)}
+.ok-in{background:var(--green-soft)!important;border-bottom-color:var(--green)!important;color:var(--green)!important}
+.no-in{background:var(--red-soft)!important;border-bottom-color:var(--red)!important;color:var(--red)!important;text-decoration:line-through}
+.ans{color:var(--red);font-weight:700;direction:ltr;display:inline-block;margin-inline:8px}
+.mrow{display:flex;flex-wrap:wrap;gap:8px}
+.mopt{padding:4px 16px;border:1.5px solid var(--rule-strong);background:var(--paper);border-radius:4px;direction:auto}
+.mopt.picked{background:var(--pen-soft);border-color:var(--pen);font-weight:700}
+.mopt.right{background:var(--green-soft);border-color:var(--green);color:var(--green);font-weight:700}
+.mopt.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red);text-decoration:line-through}
+.model{border:1.5px dashed var(--red);color:var(--red);padding:8px 12px;border-radius:4px;direction:ltr;text-align:left}
+.model b{direction:rtl;unicode-bidi:isolate}
+.result{border:2px solid var(--rule-strong);padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;font-weight:700}
+/* contents page */
+.toc{display:flex;flex-direction:column}
+.toc button{display:flex;align-items:center;gap:12px;padding:14px 4px;border:0;border-bottom:1px dotted #777;background:var(--paper);text-align:start;width:100%}
+.toc button:hover:not([disabled]){background:var(--pen-soft)}
+.toc button[disabled]{color:#888;cursor:not-allowed}
+.toc .nm{flex:1;min-width:0;font-weight:700;font-size:19px}
+.toc .nm small{display:block;font-weight:400;color:var(--muted);direction:ltr;text-align:left;font-size:15px}
+.chip{display:inline-block;font-size:13px;font-weight:700;border:1.5px solid var(--rule-strong);border-radius:99px;padding:0 10px;white-space:nowrap}
+.chip.ok{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.chip.todo{border-color:var(--rule);color:var(--muted);font-weight:500}
+.hero{display:flex;flex-direction:column;gap:6px}
+.hero h1{font-size:clamp(32px,6vw,52px);margin:0;color:var(--pen);line-height:1.15}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:8px;align-self:flex-start}
+@media (max-width:640px){.tab{font-size:14px;padding:8px 6px}.tn{display:none}.sheet{padding-top:20px}.toc .chips{display:none}}
+@media print{.top,.tabs,.btns,.pager{display:none}}
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ===== helpers ===== */
+const SPK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const spkBtn=t=>`<button class="spk" data-s="${esc(t)}" aria-label="השמעה">${SPK}</button>`;
+const E=(en,he)=>`<div class="ex">${spkBtn(en)}<div class="two"><div class="en">${esc(en)}</div>${he?`<div class="he">${he}</div>`:''}</div></div>`;
+const TBL=(h,rows)=>`<div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${/^[\x00-\x7F]+$/.test(c)&&c.trim()?' class="l"':''}>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;
+const NOTE=t=>`<div class="note"><b>זכור:</b> ${t}</div>`;
+const WARN=t=>`<div class="warnbox"><b>שים לב:</b> ${t}</div>`;
+const L=t=>`<span class="ltr" dir="ltr">${t}</span>`;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function speak(t){try{const s=window.speechSynthesis;if(!s)return;s.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.85;s.speak(u)}catch(e){}}
+const Q=a=>({p:a[0],c:a[1],w:[a[2],a[3],a[4]],e:a[5]});
+
+/* ===== units ===== */
+const UNITS=[
+{id:'u1',name:'כינויי גוף ושייכות',en:'Pronouns',
+ lessons:[
+  {t:'מי עושה? כינויי גוף',h:`
+   <p>כינוי גוף מחליף שם של אדם או חפץ. בכל משפט באנגלית חייב להיות מי שעושה, ולכן אלה המילים הראשונות ללמוד.</p>
+   ${TBL(['English','עברית'],[['I','אני'],['you','אתה / את / אתם / אתן'],['he','הוא'],['she','היא'],['it','זה (חפץ, חיה, דבר)'],['we','אנחנו'],['they','הם / הן']])}
+   ${NOTE('<b>I</b> נכתב תמיד באות גדולה, גם באמצע משפט.')}
+   ${NOTE('<b>you</b> זה גם ליחיד וגם לרבים, גם לזכר וגם לנקבה. ההקשר מבהיר.')}
+  `},
+  {t:'he, she או it?',h:`
+   <p>בעברית לכל דבר יש מין (שולחן זכר, כוס נקבה). באנגלית אין כזה:</p>
+   <ul><li><b>he</b> רק לגבר או לילד.</li><li><b>she</b> רק לאישה או לילדה.</li><li><b>it</b> לכל חפץ, מקום, רעיון ובדרך כלל חיה.</li><li><b>they</b> לכמה אנשים או כמה דברים, זכרים ונקבות.</li></ul>
+   ${E('Dan is my brother. He is nice.','דן הוא אחי. הוא נחמד.')}
+   ${E('Maya is my friend. She is nice.','מאיה חברה שלי. היא נחמדה.')}
+   ${E('The phone is new. It is black.','הטלפון חדש. הוא שחור.')}
+   ${E('Dan and Maya are friends. They are nice.','דן ומאיה חברים. הם נחמדים.')}
+   ${E('Dan and I are friends. We are nice.','דן ואני חברים. אנחנו נחמדים.')}
+  `},
+  {t:'שלי, שלך, שלו: מילות שייכות',h:`
+   <p>כשרוצים להגיד של מי הדבר, מוסיפים מילת שייכות <b>לפני</b> הדבר.</p>
+   ${TBL(['כינוי','מילת שייכות','משמעות'],[['I','my','שלי'],['you','your','שלך / שלכם'],['he','his','שלו'],['she','her','שלה'],['it','its','שלו / שלה (של דבר)'],['we','our','שלנו'],['they','their','שלהם / שלהן']])}
+   ${E('This is my phone.','זה הטלפון שלי.')}
+   ${E('Your name is Dan.','השם שלך הוא דן.')}
+   ${E('His car is red.','המכונית שלו אדומה.')}
+   ${E('Her bag is small.','התיק שלה קטן.')}
+   ${E('Our house is big.','הבית שלנו גדול.')}
+   ${E('Their names are Dan and Rina.','השמות שלהם הם דן ורינה.')}
+   ${WARN('אל תבלבל בין <b>I</b> (אני) ל-<b>my</b> (שלי), ובין <b>we</b> (אנחנו) ל-<b>our</b> (שלנו).')}
+  `}],
+ vocab:[['I','אני'],['you','אתה / את / אתם'],['he','הוא'],['she','היא'],['it','זה (חפץ / חיה)'],['we','אנחנו'],['they','הם / הן'],['my','שלי'],['your','שלך'],['his','שלו'],['her','שלה'],['our','שלנו'],['their','שלהם'],['name','שם'],['man','גבר'],['woman','אישה'],['boy','ילד'],['girl','ילדה'],['friend','חבר'],['family','משפחה']],
+ bank:[
+  [`איך אומרים ״אני״ באנגלית?`,`I`,`He`,`We`,`You`,`I = אני, ותמיד באות גדולה.`],
+  [`״היא״ באנגלית:`,`She`,`He`,`It`,`They`,`she = היא.`],
+  [`״הם / הן״ באנגלית:`,`They`,`We`,`You`,`She`,`they = הם והן.`],
+  [`״אנחנו״ באנגלית:`,`We`,`They`,`You`,`I`,`we = אנחנו.`],
+  [`איזה כינוי מתאים ל״שולחן״ (חפץ)?`,`It`,`He`,`She`,`They`,`לחפץ אחד משתמשים ב-it.`],
+  [`___ is my brother. (אחי)`,`He`,`She`,`It`,`We`,`אח הוא גבר, לכן he.`],
+  [`___ is my sister. (אחותי)`,`She`,`He`,`It`,`They`,`אחות היא אישה, לכן she.`],
+  [`Tom and I are friends. ___ are friends.`,`We`,`They`,`You`,`He`,`אני ועוד מישהו = we.`],
+  [`Dan and Noa are students. ___ are students.`,`They`,`We`,`He`,`It`,`שני אנשים אחרים = they.`],
+  [`״שלך״ באנגלית:`,`your`,`my`,`his`,`her`,`your = שלך.`],
+  [`״שלי״ באנגלית:`,`my`,`your`,`our`,`I`,`my = שלי. I זה אני.`],
+  [`This is ___ phone. (הטלפון של דן)`,`his`,`her`,`their`,`my`,`דן הוא גבר, לכן his.`],
+  [`This is ___ bag. (התיק של שרה)`,`her`,`his`,`their`,`our`,`שרה היא אישה, לכן her.`],
+  [`״שלנו״ באנגלית:`,`our`,`we`,`your`,`their`,`our = שלנו. we זה אנחנו.`],
+  [`They are my parents. ___ names are Dan and Rina.`,`Their`,`His`,`Her`,`Our`,`של ההורים (הם) = their.`],
+  [`We love ___ house. (הבית שלנו)`,`our`,`we`,`their`,`his`,`אחרי we בא our.`],
+  [`מה ההבדל בין he ל-she?`,`he לגבר, she לאישה`,`he לאישה, she לגבר`,`אין הבדל`,`he לרבים, she ליחיד`,`he = הוא, she = היא.`],
+  [`איזה כינוי מתאים גם ל״אתה״ וגם ל״אתם״?`,`you`,`he`,`they`,`we`,`you משמש ליחיד וגם לרבים.`],
+  [`Maya is my friend. ___ is nice.`,`She`,`He`,`They`,`It`,`מאיה היא אישה, לכן she.`],
+  [`The car is new. ___ is red.`,`It`,`He`,`She`,`We`,`מכונית היא חפץ, לכן it.`]
+ ]},
+
+{id:'u2',name:'הפועל to be: חיוב',en:'am / is / are',
+ lessons:[
+  {t:'am, is, are: להיות',h:`
+   <p>בעברית אומרים ״אני עייף״ בלי פועל. באנגלית <b>חייבים</b> פועל באמצע: אני <b>הנני</b> עייף. הפועל הזה הוא <b>to be</b>, והוא הכי חשוב באנגלית.</p>
+   ${TBL(['כינוי','to be','דוגמה'],[['I','am','I am tired'],['you','are','You are late'],['he','is','He is at home'],['she','is','She is happy'],['it','is','It is big'],['we','are','We are friends'],['they','are','They are ready']])}
+   ${NOTE('כלל פשוט: <b>I</b> עם <b>am</b>. <b>he / she / it</b> עם <b>is</b>. כל השאר (<b>you / we / they</b>) עם <b>are</b>.')}
+   ${E('I am a student.','אני סטודנט.')}
+   ${E('She is a teacher.','היא מורה.')}
+   ${E('We are at home.','אנחנו בבית.')}
+  `},
+  {t:'קיצורים: I\'m, he\'s, they\'re',h:`
+   <p>בשיחה אנשים כמעט תמיד מקצרים. את הקיצורים חובה להכיר, גם כדי להבין וגם כדי להישמע טבעי.</p>
+   ${TBL(['מלא','מקוצר'],[['I am','I\'m'],['you are','you\'re'],['he is','he\'s'],['she is','she\'s'],['it is','it\'s'],['we are','we\'re'],['they are','they\'re']])}
+   ${E('I\'m tired.','אני עייף.')}
+   ${E('He\'s at work.','הוא בעבודה.')}
+   ${E('They\'re from Israel.','הם מישראל.')}
+   ${E('We\'re ready.','אנחנו מוכנים.')}
+   ${NOTE('גם שמות אפשר לקצר: <b>Dan\'s</b> at home = דן בבית.')}
+  `},
+  {t:'משפטים נפוצים עם to be',h:`
+   <p>הנה המשפטים שתשתמש בהם כל יום. שמע כל אחד וחזור עליו בקול.</p>
+   ${E('My name is Tom.','קוראים לי טום.')}
+   ${E('I\'m 24 years old.','אני בן 24.')}
+   ${E('I\'m from Israel.','אני מישראל.')}
+   ${E('I\'m an engineer.','אני מהנדס. (לפני תואר שמתחיל בתנועה: an)')}
+   ${E('I\'m tired.','אני עייף.')}
+   ${E('I\'m hungry.','אני רעב.')}
+   ${E('I\'m at home.','אני בבית.')}
+   ${E('She\'s very nice.','היא ממש נחמדה.')}
+   ${E('We\'re late.','אנחנו מאחרים.')}
+   ${WARN('באנגלית אי אפשר לדלג על to be. לא אומרים ״I tired״ אלא <b>I am tired</b>.')}
+  `}],
+ vocab:[['student','תלמיד / סטודנט'],['teacher','מורה'],['tired','עייף'],['hungry','רעב'],['thirsty','צמא'],['happy','שמח'],['sad','עצוב'],['busy','עסוק'],['ready','מוכן'],['late','מאחר'],['early','מוקדם'],['at home','בבית'],['at work','בעבודה'],['here','כאן'],['there','שם'],['nice','נחמד'],['good','טוב'],['big','גדול'],['small','קטן'],['from','מ... (מקור)']],
+ bank:[
+  [`I ___ a student.`,`am`,`is`,`are`,`be`,`עם I תמיד am.`],
+  [`He ___ tired.`,`is`,`am`,`are`,`be`,`עם he תמיד is.`],
+  [`She ___ at home.`,`is`,`are`,`am`,`be`,`עם she תמיד is.`],
+  [`We ___ friends.`,`are`,`is`,`am`,`be`,`עם we תמיד are.`],
+  [`They ___ at work.`,`are`,`is`,`am`,`be`,`עם they תמיד are.`],
+  [`You ___ my friend.`,`are`,`is`,`am`,`be`,`עם you תמיד are.`],
+  [`It ___ a big house.`,`is`,`are`,`am`,`be`,`עם it תמיד is.`],
+  [`The dog ___ hungry.`,`is`,`are`,`am`,`be`,`הכלב = it, לכן is.`],
+  [`My parents ___ old.`,`are`,`is`,`am`,`be`,`ההורים שלי = they, לכן are.`],
+  [`Dan and I ___ ready.`,`are`,`is`,`am`,`be`,`דן ואני = we, לכן are.`],
+  [`הקיצור של I am:`,`I'm`,`I's`,`I'are`,`Iam`,`I am = I'm.`],
+  [`הקיצור של she is:`,`she's`,`she're`,`she'am`,`sh'is`,`she is = she's.`],
+  [`הקיצור של they are:`,`they're`,`they's`,`they'm`,`the're`,`they are = they're.`],
+  [`איזה משפט נכון?`,`I am happy.`,`I is happy.`,`I are happy.`,`I be happy.`,`I am, בלי חריגים.`],
+  [`איך אומרים ״אני מישראל״?`,`I am from Israel.`,`I from Israel.`,`I is from Israel.`,`I am Israel from.`,`צריך to be: I am from.`],
+  [`איך אומרים ״אני עייף״?`,`I am tired.`,`I tired.`,`I have tired.`,`I do tired.`,`חייבים am באמצע.`],
+  [`My name ___ Tom.`,`is`,`am`,`are`,`be`,`My name = it, לכן is.`],
+  [`The kids ___ happy.`,`are`,`is`,`am`,`be`,`kids = they, לכן are.`],
+  [`You ___ very kind.`,`are`,`is`,`am`,`be`,`עם you תמיד are.`],
+  [`איזה משפט נכון?`,`He's a teacher.`,`He are a teacher.`,`He am a teacher.`,`He be a teacher.`,`he is = he's.`]
+ ]},
+
+{id:'u3',name:'to be: שלילה, שאלות ומשפטי נימוס',en:'Negative & Questions',
+ lessons:[
+  {t:'שלילה: not',h:`
+   <p>כדי להפוך משפט לשלילי מוסיפים <b>not</b> אחרי am / is / are.</p>
+   ${TBL(['חיוב','שלילה','קיצור'],[['I am','I am not','I\'m not'],['you are','you are not','you aren\'t / you\'re not'],['he is','he is not','he isn\'t / he\'s not'],['she is','she is not','she isn\'t / she\'s not'],['it is','it is not','it isn\'t / it\'s not'],['we are','we are not','we aren\'t / we\'re not'],['they are','they are not','they aren\'t / they\'re not']])}
+   ${E('I\'m not tired.','אני לא עייף.')}
+   ${E('He isn\'t at home.','הוא לא בבית.')}
+   ${E('They aren\'t ready.','הם לא מוכנים.')}
+   ${WARN('אין ״amn\'t״. אחרי I אומרים <b>I\'m not</b> בלבד.')}
+  `},
+  {t:'שאלות כן / לא',h:`
+   <p>כדי לשאול מחליפים מקום: to be עולה <b>לפני</b> הכינוי.</p>
+   ${TBL(['משפט','שאלה'],[['You are ready.','Are you ready?'],['He is a teacher.','Is he a teacher?'],['They are at home.','Are they at home?'],['I am late.','Am I late?']])}
+   <h3>תשובות קצרות</h3>
+   ${E('Are you ready? Yes, I am.','כן.')}
+   ${E('Is she your sister? No, she isn\'t.','לא.')}
+   ${E('Are they friends? Yes, they are.','כן.')}
+   ${E('Are you tired? No, I\'m not.','לא.')}
+   ${NOTE('בתשובה קצרה <b>כן</b> לא מקצרים: Yes, he is. (לא ״Yes, he\'s״).')}
+  `},
+  {t:'מילות שאלה ושיחת היכרות',h:`
+   <p>מילת שאלה באה בתחילת המשפט, ואחריה to be.</p>
+   ${TBL(['מילה','משמעות'],[['what','מה'],['who','מי'],['where','איפה'],['when','מתי'],['why','למה'],['how','איך']])}
+   ${E('What is your name?','מה שמך?')}
+   ${E('Where are you from?','מאיפה אתה?')}
+   ${E('How are you?','מה שלומך?')}
+   ${E('Who is he?','מי הוא?')}
+   ${E('Where is my phone?','איפה הטלפון שלי?')}
+   <h3>שיחה אמיתית</h3>
+   ${E('Hello! My name is Tom.','שלום! קוראים לי טום.')}
+   ${E('Nice to meet you.','נעים להכיר.')}
+   ${E('I\'m fine, thank you. And you?','אני בסדר, תודה. ואתה?')}
+   ${E('Thank you. - You\'re welcome.','תודה. - בבקשה.')}
+   ${E('Excuse me, where is the bathroom?','סליחה, איפה השירותים?')}
+   ${E('Sorry, I don\'t know.','סליחה, אני לא יודע.')}
+  `}],
+ vocab:[['yes','כן'],['no','לא'],['please','בבקשה'],['thank you','תודה'],['sorry','סליחה (מצטער)'],['excuse me','סליחה (לפני שפונים)'],['hello','שלום'],['goodbye','להתראות'],['where','איפה'],['who','מי'],['what','מה'],['how','איך'],['why','למה'],['when','מתי'],['nice to meet you','נעים להכיר'],['good morning','בוקר טוב'],['good night','לילה טוב'],['you\'re welcome','בבקשה (על תודה)'],['I don\'t know','אני לא יודע'],['maybe','אולי']],
+ bank:[
+  [`I ___ tired. (אני לא עייף)`,`am not`,`is not`,`are not`,`not am`,`עם I: am not.`],
+  [`He ___ at home. (הוא לא בבית)`,`isn't`,`aren't`,`am not`,`not`,`עם he: isn't.`],
+  [`They ___ ready. (הם לא מוכנים)`,`aren't`,`isn't`,`am not`,`don't`,`עם they: aren't.`],
+  [`We ___ late. (אנחנו לא מאחרים)`,`aren't`,`isn't`,`am not`,`amn't`,`עם we: aren't.`],
+  [`She ___ my sister. (היא לא אחותי)`,`isn't`,`aren't`,`am not`,`don't`,`עם she: isn't.`],
+  [`הקיצור של is not:`,`isn't`,`amn't`,`isnt'`,`is'nt`,`is not = isn't.`],
+  [`___ you hungry?`,`Are`,`Is`,`Am`,`Do`,`שאלה עם you: Are you.`],
+  [`___ he a teacher?`,`Is`,`Are`,`Am`,`Does`,`שאלה עם he: Is he.`],
+  [`___ I late?`,`Am`,`Is`,`Are`,`Do`,`שאלה עם I: Am I.`],
+  [`___ they at home?`,`Are`,`Is`,`Am`,`Do`,`שאלה עם they: Are they.`],
+  [`Is she your sister? Yes, ___.`,`she is`,`she are`,`she am`,`she does`,`עונים עם אותו to be: she is.`],
+  [`Are you ready? No, ___.`,`I'm not`,`I amn't`,`I isn't`,`I don't`,`עם I: I'm not.`],
+  [`Are they friends? Yes, ___.`,`they are`,`they is`,`they do`,`they're not`,`כן + they are.`],
+  [`איך שואלים ״מה שמך?״`,`What's your name?`,`What your name?`,`How you name?`,`Who is name?`,`What is = What's.`],
+  [`איך שואלים ״מאיפה אתה?״`,`Where are you from?`,`Where you from are?`,`Where do you from?`,`What are you from?`,`Where + are you + from.`],
+  [`איך שואלים ״מה שלומך?״`,`How are you?`,`How you are do?`,`What are you?`,`Where are you?`,`How are you? = מה שלומך.`],
+  [`מישהו אומר Thank you. מה עונים?`,`You're welcome.`,`I'm welcome.`,`Please.`,`Sorry.`,`You're welcome = בבקשה.`],
+  [`Where ___ my keys?`,`are`,`is`,`am`,`do`,`keys זה רבים, לכן are.`],
+  [`Who ___ he?`,`is`,`are`,`am`,`do`,`עם he: is.`],
+  [`איזה משפט שגוי באנגלית?`,`He not is tired.`,`He isn't tired.`,`He's not tired.`,`Is he tired?`,`not בא אחרי is: He is not tired.`]
+ ]},
+
+{id:'u4',name:'זה, זאת, אלה + a / an + רבים',en:'This, That, a/an, Plurals',
+ lessons:[
+  {t:'this, that, these, those',h:`
+   <p>כדי להצביע על משהו משתמשים ב-4 מילים, לפי <b>קרוב או רחוק</b> ו<b>אחד או כמה</b>.</p>
+   ${TBL(['','קרוב','רחוק'],[['אחד','this','that'],['כמה','these','those']])}
+   ${E('This is my phone.','זה הטלפון שלי. (ביד)')}
+   ${E('That is my car.','זאת המכונית שלי. (שם, רחוק)')}
+   ${E('These are my keys.','אלה המפתחות שלי. (קרובים)')}
+   ${E('Those are my friends.','אלה החברים שלי. (רחוקים)')}
+   <h3>שאלות</h3>
+   ${E('What is this? It\'s a pen.','מה זה? זה עט.')}
+   ${E('What are those? They\'re cars.','מה אלה? אלה מכוניות.')}
+  `},
+  {t:'a ו-an',h:`
+   <p>לפני דבר אחד (שאפשר לספור) שמים <b>a</b> או <b>an</b>. הם אומרים ״אחד״.</p>
+   <ul><li><b>a</b> לפני מילה שמתחילה בצליל עיצור: a book, a car, a phone.</li><li><b>an</b> לפני מילה שמתחילה בצליל תנועה (a, e, i, o, u): an apple, an orange, an umbrella.</li></ul>
+   ${E('I have a car.','יש לי מכונית.')}
+   ${E('I eat an apple.','אני אוכל תפוח.')}
+   ${WARN('הולכים לפי <b>הצליל</b> ולא לפי האות: <b>an hour</b> (ה שותקת), <b>a university</b> (נשמע ״יו״).')}
+  `},
+  {t:'רבים ו-there is / there are',h:`
+   <p>כדי לעשות רבים מוסיפים בדרך כלל <b>s</b>. בלי a / an ברבים.</p>
+   ${TBL(['כלל','יחיד','רבים'],[['רגיל: s','book','books'],['נגמר ב-s, x, ch, sh: es','box','boxes'],['עיצור + y: ies','city','cities'],['חריג','man','men'],['חריג','woman','women'],['חריג','child','children'],['חריג','person','people']])}
+   <h3>יש / אין</h3>
+   <p><b>there is</b> לדבר אחד, <b>there are</b> לכמה.</p>
+   ${E('There is a chair here.','יש כאן כיסא.')}
+   ${E('There are two chairs here.','יש כאן שני כיסאות.')}
+   ${E('Is there a bathroom here?','יש כאן שירותים?')}
+   ${E('Are there any questions?','יש שאלות?')}
+  `}],
+ vocab:[['book','ספר'],['phone','טלפון'],['bag','תיק'],['car','מכונית'],['table','שולחן'],['chair','כיסא'],['door','דלת'],['window','חלון'],['water','מים'],['coffee','קפה'],['key','מפתח'],['pen','עט'],['computer','מחשב'],['bed','מיטה'],['house','בית'],['apple','תפוח'],['bread','לחם'],['shoes','נעליים'],['money','כסף'],['watch','שעון יד']],
+ bank:[
+  [`___ is my phone. (קרוב אליי, אחד)`,`This`,`These`,`Those`,`Them`,`קרוב + אחד = this.`],
+  [`___ is my car. (רחוק, אחת)`,`That`,`This`,`These`,`Those`,`רחוק + אחד = that.`],
+  [`___ are my keys. (קרובים)`,`These`,`This`,`That`,`It`,`קרוב + כמה = these.`],
+  [`___ are my friends. (רחוקים)`,`Those`,`That`,`This`,`These`,`רחוק + כמה = those.`],
+  [`I eat ___ apple.`,`an`,`a`,`and`,`at`,`apple מתחיל בתנועה, לכן an.`],
+  [`I have ___ book.`,`a`,`an`,`and`,`at`,`book מתחיל בעיצור, לכן a.`],
+  [`She has ___ orange.`,`an`,`a`,`and`,`at`,`orange מתחיל בתנועה, לכן an.`],
+  [`I need ___ umbrella.`,`an`,`a`,`and`,`at`,`umbrella מתחיל בתנועה, לכן an.`],
+  [`He drives ___ car.`,`a`,`an`,`and`,`at`,`car מתחיל בעיצור, לכן a.`],
+  [`I wait for ___ hour.`,`an`,`a`,`and`,`one`,`ה ב-hour שותקת, לכן an.`],
+  [`הרבים של book:`,`books`,`bookes`,`bookies`,`book`,`מוסיפים s.`],
+  [`הרבים של box:`,`boxes`,`boxs`,`boxies`,`boxen`,`אחרי x מוסיפים es.`],
+  [`הרבים של city:`,`cities`,`citys`,`cityes`,`citis`,`עיצור + y הופך ל-ies.`],
+  [`הרבים של man:`,`men`,`mans`,`manes`,`mens`,`man הוא חריג: men.`],
+  [`הרבים של child:`,`children`,`childs`,`childen`,`childes`,`child הוא חריג: children.`],
+  [`What is this?`,`It's a pen.`,`They're pens.`,`These is a pen.`,`It are a pen.`,`אחד = It's a.`],
+  [`What are those?`,`They're cars.`,`It's a car.`,`Those is cars.`,`They a cars.`,`כמה = They're + רבים.`],
+  [`There are two ___. (שתי מכוניות)`,`cars`,`car`,`a car`,`an cars`,`אחרי מספר 2 ומעלה: רבים.`],
+  [`___ is a chair here.`,`There`,`This`,`These`,`They`,`There is = יש.`],
+  [`There ___ two chairs.`,`are`,`is`,`am`,`be`,`שני כיסאות = there are.`]
+ ]},
+
+{id:'u5',name:'מספרים, ימים ושעות',en:'Numbers, Days, Time',
+ lessons:[
+  {t:'מספרים',h:`
+   ${TBL(['','English','','English'],[['0','zero','11','eleven'],['1','one','12','twelve'],['2','two','13','thirteen'],['3','three','14','fourteen'],['4','four','15','fifteen'],['5','five','16','sixteen'],['6','six','17','seventeen'],['7','seven','18','eighteen'],['8','eight','19','nineteen'],['9','nine','20','twenty'],['10','ten','','']])}
+   ${TBL(['מספר','English'],[['20','twenty'],['30','thirty'],['40','forty'],['50','fifty'],['60','sixty'],['70','seventy'],['80','eighty'],['90','ninety'],['100','one hundred'],['1,000','one thousand']])}
+   ${NOTE('מספר מורכב: עשרות + מקף + יחידות. <b>21 = twenty-one</b>, <b>35 = thirty-five</b>.')}
+   ${WARN('<b>fifteen / fifty</b> ו-<b>thirteen / thirty</b> נשמעים דומים. ההטעמה ב-teen היא על הסוף (fif<b>TEEN</b>), ובעשרות על ההתחלה (<b>FIF</b>ty). שמע ובדוק.')}
+   ${E('fifteen','15')}${E('fifty','50')}
+   ${E('My phone number is zero five zero...','מספר הטלפון שלי...')}
+  `},
+  {t:'ימות השבוע',h:`
+   ${TBL(['English','עברית'],[['Sunday','יום ראשון'],['Monday','יום שני'],['Tuesday','יום שלישי'],['Wednesday','יום רביעי'],['Thursday','יום חמישי'],['Friday','יום שישי'],['Saturday','שבת']])}
+   ${NOTE('ימים וחודשים נכתבים תמיד באות גדולה בהתחלה.')}
+   ${E('Today is Monday.','היום יום שני.')}
+   ${E('Tomorrow is Tuesday.','מחר יום שלישי.')}
+   ${E('Yesterday was Sunday.','אתמול היה יום ראשון.')}
+   <h3>מילות יחס</h3>
+   <ul><li><b>on</b> + יום: on Monday</li><li><b>at</b> + שעה: at 5 o'clock</li><li><b>in</b> + חודש / חלק יום: in May, in the morning</li></ul>
+   ${E('The meeting is on Monday.','הפגישה ביום שני.')}
+   ${E('I wake up at seven.','אני מתעורר בשבע.')}
+   ${E('We are free in the evening.','אנחנו פנויים בערב.')}
+  `},
+  {t:'השעה',h:`
+   ${E('What time is it?','מה השעה?')}
+   ${E('It\'s three o\'clock.','השעה שלוש בדיוק.')}
+   ${E('It\'s half past eight.','שמונה וחצי.')}
+   ${E('It\'s quarter past five.','חמש ורבע.')}
+   ${E('It\'s quarter to six.','רבע לשש.')}
+   ${E('It\'s ten past four.','ארבע ועשר.')}
+   ${E('It\'s twenty to nine.','תשע פחות עשרים.')}
+   ${NOTE('<b>past</b> = אחרי (חצי השעה הראשון). <b>to</b> = לפני (חצי השעה השני). אפשר גם סתם לומר את המספרים: <b>It\'s eight thirty.</b> (8:30).')}
+   ${E('What time is the meeting? At two thirty.','באיזו שעה הפגישה? בשתיים וחצי.')}
+  `}],
+ vocab:[['one','אחד'],['two','שניים'],['three','שלושה'],['four','ארבעה'],['five','חמישה'],['six','שישה'],['seven','שבעה'],['eight','שמונה'],['nine','תשעה'],['ten','עשרה'],['Monday','יום שני'],['Tuesday','יום שלישי'],['Wednesday','יום רביעי'],['Thursday','יום חמישי'],['Friday','יום שישי'],['Saturday','שבת'],['Sunday','יום ראשון'],['today','היום'],['tomorrow','מחר'],['yesterday','אתמול']],
+ bank:[
+  [`איזה מספר זה seven?`,`7`,`17`,`70`,`6`,`seven = 7.`],
+  [`איזה מספר זה thirteen?`,`13`,`30`,`31`,`3`,`thirteen = 13, thirty = 30.`],
+  [`איזה מספר זה fifty?`,`50`,`15`,`5`,`500`,`fifty = 50, fifteen = 15.`],
+  [`איזה מספר זה twenty-one?`,`21`,`12`,`201`,`20`,`twenty-one = 21.`],
+  [`איך כותבים 14?`,`fourteen`,`forty`,`fourty`,`fourthteen`,`14 = fourteen, 40 = forty.`],
+  [`איך כותבים 90?`,`ninety`,`nineteen`,`ninty`,`ninetey`,`90 = ninety, 19 = nineteen.`],
+  [`איזה יום בא אחרי Monday?`,`Tuesday`,`Sunday`,`Wednesday`,`Thursday`,`אחרי שני בא שלישי.`],
+  [`איזה יום בא לפני Friday?`,`Thursday`,`Saturday`,`Wednesday`,`Sunday`,`לפני שישי בא חמישי.`],
+  [`״שבת״ באנגלית:`,`Saturday`,`Sunday`,`Friday`,`Monday`,`Saturday = שבת.`],
+  [`״יום ראשון״ באנגלית:`,`Sunday`,`Monday`,`Saturday`,`Thursday`,`Sunday = יום ראשון.`],
+  [`״מחר״ באנגלית:`,`tomorrow`,`yesterday`,`today`,`tonight`,`tomorrow = מחר.`],
+  [`״אתמול״ באנגלית:`,`yesterday`,`tomorrow`,`today`,`morning`,`yesterday = אתמול.`],
+  [`השעה 3:00. מה אומרים?`,`It's three o'clock.`,`It's three clock.`,`I'm three o'clock.`,`They're three.`,`It's three o'clock.`],
+  [`השעה 8:30. מה אומרים?`,`It's half past eight.`,`It's half to eight.`,`It's eight and zero.`,`It's thirty eight.`,`half past = וחצי.`],
+  [`5:15. מה אומרים?`,`It's quarter past five.`,`It's quarter to five.`,`It's five quarter.`,`It's half past five.`,`quarter past = ורבע.`],
+  [`5:45. מה אומרים?`,`It's quarter to six.`,`It's quarter past six.`,`It's quarter past five.`,`It's half past six.`,`quarter to six = רבע לשש.`],
+  [`איך שואלים מה השעה?`,`What time is it?`,`What is time?`,`How is the time?`,`Which hour it is?`,`What time is it?`],
+  [`Today ___ Monday.`,`is`,`are`,`am`,`be`,`today = it, לכן is.`],
+  [`The meeting is ___ Monday.`,`on`,`in`,`at`,`to`,`יום: on.`],
+  [`The meeting is ___ 5 o'clock.`,`at`,`on`,`in`,`to`,`שעה: at.`]
+ ]},
+
+{id:'u6',name:'הווה פשוט: חיוב',en:'Present Simple',
+ lessons:[
+  {t:'הווה פשוט: הרגלים ועובדות',h:`
+   <p>הזמן הכי שימושי באנגלית. משתמשים בו כדי לדבר על <b>הרגלים, שגרה ועובדות</b>: מה אני עושה בדרך כלל, איפה אני גר, מה אני אוהב.</p>
+   ${E('I work in Tel Aviv.','אני עובד בתל אביב.')}
+   ${E('We live in Jerusalem.','אנחנו גרים בירושלים.')}
+   ${E('They play basketball on Friday.','הם משחקים כדורסל ביום שישי.')}
+   ${E('I like coffee.','אני אוהב קפה.')}
+   ${NOTE('לגופים I / you / we / they הפועל נשאר <b>כמו במילון</b>, בלי שינוי.')}
+   ${WARN('כאן <b>לא</b> משתמשים ב-to be. אומרים <b>I work</b> ולא ״I am work״.')}
+  `},
+  {t:'הכלל של ה-s',h:`
+   <p>רק לגוף שלישי יחיד (<b>he / she / it</b> או שם של אדם אחד) מוסיפים לפועל <b>s</b>.</p>
+   ${E('I work. / He works.','אני עובד. / הוא עובד.')}
+   ${E('You live here. / She lives here.','אתה גר כאן. / היא גרה כאן.')}
+   ${E('We play. / It plays.','אנחנו משחקים. / זה משחק.')}
+   ${TBL(['סיום הפועל','מוסיפים','דוגמה'],[['רגיל','s','work → works'],['s, sh, ch, x, o','es','watch → watches, go → goes'],['עיצור + y','y הופך ל-ies','study → studies'],['חריג','','have → has']])}
+   ${WARN('זאת הטעות הכי נפוצה של דוברי עברית: <b>He work</b> ✗, <b>He works</b> ✓.')}
+  `},
+  {t:'משפטים נפוצים',h:`
+   ${E('I wake up at seven.','אני מתעורר בשבע.')}
+   ${E('I drink coffee every morning.','אני שותה קפה כל בוקר.')}
+   ${E('He works at a big company.','הוא עובד בחברה גדולה.')}
+   ${E('She speaks English and Hebrew.','היא מדברת אנגלית ועברית.')}
+   ${E('My brother lives in Haifa.','אחי גר בחיפה.')}
+   ${E('We eat dinner at eight.','אנחנו אוכלים ארוחת ערב בשמונה.')}
+   ${E('I need a new phone.','אני צריך טלפון חדש.')}
+   ${E('I want some water.','אני רוצה קצת מים.')}
+   ${E('He has a new car.','יש לו מכונית חדשה.')}
+  `}],
+ vocab:[['work','עובד / לעבוד'],['live','גר'],['eat','אוכל'],['drink','שותה'],['go','הולך / נוסע'],['like','אוהב / מחבב'],['want','רוצה'],['have','יש ל...'],['need','צריך'],['play','משחק'],['study','לומד'],['sleep','ישן'],['speak','מדבר'],['read','קורא'],['watch','צופה'],['drive','נוהג'],['cook','מבשל'],['buy','קונה'],['know','יודע'],['love','אוהב מאוד']],
+ bank:[
+  [`I ___ in Israel.`,`live`,`lives`,`living`,`am live`,`עם I הפועל בלי s.`],
+  [`He ___ in Tel Aviv.`,`lives`,`live`,`living`,`is live`,`עם he מוסיפים s.`],
+  [`She ___ coffee every day.`,`drinks`,`drink`,`drinking`,`is drinks`,`עם she מוסיפים s.`],
+  [`They ___ football.`,`play`,`plays`,`playing`,`is play`,`עם they בלי s.`],
+  [`We ___ English.`,`study`,`studies`,`studying`,`studys`,`עם we בלי s.`],
+  [`My mother ___ at a hospital.`,`works`,`work`,`working`,`is work`,`אמא שלי = she, לכן works.`],
+  [`The dog ___ a lot.`,`eats`,`eat`,`eating`,`is eat`,`הכלב = it, לכן eats.`],
+  [`go: He ___ to work.`,`goes`,`gos`,`go`,`going`,`go נגמר ב-o ולכן goes.`],
+  [`have: She ___ a car.`,`has`,`haves`,`have`,`having`,`have הוא חריג: has.`],
+  [`watch: He ___ TV.`,`watches`,`watchs`,`watch`,`watching`,`אחרי ch מוסיפים es.`],
+  [`study: She ___ English.`,`studies`,`studys`,`study`,`studying`,`עיצור + y הופך ל-ies.`],
+  [`do: He ___ his homework.`,`does`,`dos`,`do`,`doing`,`do הופך ל-does.`],
+  [`I ___ a car.`,`have`,`has`,`having`,`am have`,`עם I: have.`],
+  [`He ___ a new phone.`,`has`,`have`,`haves`,`having`,`עם he: has.`],
+  [`איך אומרים ״אני אוהב קפה״?`,`I like coffee.`,`I am like coffee.`,`I likes coffee.`,`I liking coffee.`,`I like, בלי to be ובלי s.`],
+  [`איך אומרים ״היא עובדת כל יום״?`,`She works every day.`,`She work every day.`,`She is work every day.`,`She working every day.`,`she works.`],
+  [`איך אומרים ״אנחנו גרים בירושלים״?`,`We live in Jerusalem.`,`We lives in Jerusalem.`,`We are live in Jerusalem.`,`We living in Jerusalem.`,`we live, בלי s.`],
+  [`My brother ___ English and Hebrew.`,`speaks`,`speak`,`speaking`,`is speak`,`brother = he, לכן speaks.`],
+  [`You ___ very fast.`,`run`,`runs`,`running`,`is run`,`עם you בלי s.`],
+  [`מתי מוסיפים s לפועל?`,`בגוף שלישי יחיד (he / she / it)`,`בכל הגופים`,`בגוף ראשון (I)`,`רק ברבים`,`s רק ל-he / she / it.`]
+ ]},
+
+{id:'u7',name:'הווה פשוט: שלילה, שאלות ותדירות',en:'Do / Does / Don\'t',
+ lessons:[
+  {t:'שלילה: don\'t ו-doesn\'t',h:`
+   <p>בהווה פשוט שוללים עם <b>do not (don\'t)</b> או <b>does not (doesn\'t)</b> לפני הפועל.</p>
+   ${TBL(['כינוי','שלילה'],[['I / you / we / they','don\'t + פועל'],['he / she / it','doesn\'t + פועל']])}
+   ${E('I don\'t like tea.','אני לא אוהב תה.')}
+   ${E('They don\'t work on Friday.','הם לא עובדים ביום שישי.')}
+   ${E('She doesn\'t like tea.','היא לא אוהבת תה.')}
+   ${E('He doesn\'t have a car.','אין לו מכונית.')}
+   ${WARN('אחרי <b>doesn\'t</b> הפועל חוזר לצורה הרגילה, <b>בלי s</b>: He doesn\'t <b>work</b> ✓, He doesn\'t works ✗.')}
+  `},
+  {t:'שאלות עם Do ו-Does',h:`
+   <p>שאלה מתחילה ב-<b>Do</b> או <b>Does</b>, ואז הכינוי, ואז הפועל בצורה הרגילה.</p>
+   ${E('Do you like pizza?','אתה אוהב פיצה?')}
+   ${E('Does he work here?','הוא עובד כאן?')}
+   ${E('Does she live in Haifa?','היא גרה בחיפה?')}
+   <h3>תשובות קצרות</h3>
+   ${E('Yes, I do. / No, I don\'t.','כן. / לא.')}
+   ${E('Yes, she does. / No, she doesn\'t.','כן. / לא.')}
+   <h3>מילת שאלה + do / does</h3>
+   ${E('Where do you live?','איפה אתה גר?')}
+   ${E('What time does the meeting start?','באיזו שעה הפגישה מתחילה?')}
+   ${E('How do you go to work?','איך אתה מגיע לעבודה?')}
+   ${E('What do you do?','במה אתה עובד?')}
+  `},
+  {t:'מילות תדירות',h:`
+   ${TBL(['מילה','משמעות','אחוז בערך'],[['always','תמיד','100%'],['usually','בדרך כלל','80%'],['often','לעיתים קרובות','60%'],['sometimes','לפעמים','40%'],['never','אף פעם','0%']])}
+   ${NOTE('המילה באה <b>לפני</b> הפועל הרגיל: I <b>always</b> drink coffee. אבל <b>אחרי</b> to be: He is <b>always</b> late.')}
+   ${E('I always wake up at six.','אני תמיד מתעורר בשש.')}
+   ${E('She usually eats breakfast.','היא בדרך כלל אוכלת ארוחת בוקר.')}
+   ${E('We sometimes go to the gym.','אנחנו לפעמים הולכים לחדר כושר.')}
+   ${E('I never drink tea.','אני אף פעם לא שותה תה.')}
+   ${E('He is always late.','הוא תמיד מאחר.')}
+   ${WARN('אחרי never לא מוסיפים don\'t: <b>I never go</b> ✓, I don\'t never go ✗.')}
+  `}],
+ vocab:[['always','תמיד'],['usually','בדרך כלל'],['often','לעיתים קרובות'],['sometimes','לפעמים'],['never','אף פעם'],['every day','כל יום'],['morning','בוקר'],['evening','ערב'],['night','לילה'],['week','שבוע'],['weekend','סוף שבוע'],['breakfast','ארוחת בוקר'],['lunch','ארוחת צהריים'],['dinner','ארוחת ערב'],['wake up','להתעורר'],['start','להתחיל'],['finish','לסיים'],['exercise','להתאמן'],['shower','מקלחת'],['now','עכשיו']],
+ bank:[
+  [`I ___ like tea.`,`don't`,`doesn't`,`not`,`am not`,`עם I: don't.`],
+  [`She ___ like tea.`,`doesn't`,`don't`,`not`,`isn't`,`עם she: doesn't.`],
+  [`They ___ work on Friday.`,`don't`,`doesn't`,`aren't`,`not`,`עם they: don't.`],
+  [`He doesn't ___ coffee.`,`drink`,`drinks`,`drinking`,`is drink`,`אחרי doesn't פועל בלי s.`],
+  [`We ___ have a car.`,`don't`,`doesn't`,`aren't`,`no`,`עם we: don't.`],
+  [`My dad ___ speak French.`,`doesn't`,`don't`,`isn't`,`not`,`אבא = he, לכן doesn't.`],
+  [`___ you like pizza?`,`Do`,`Does`,`Are`,`Is`,`עם you: Do.`],
+  [`___ he work here?`,`Does`,`Do`,`Is`,`Are`,`עם he: Does.`],
+  [`___ she live in Haifa?`,`Does`,`Do`,`Is`,`Are`,`עם she: Does.`],
+  [`___ they play basketball?`,`Do`,`Does`,`Are`,`Is`,`עם they: Do.`],
+  [`Does she like coffee? Yes, ___.`,`she does`,`she do`,`she is`,`she likes`,`עונים עם does.`],
+  [`Do you speak English? No, ___.`,`I don't`,`I doesn't`,`I'm not`,`I not`,`עם I: I don't.`],
+  [`Does he have a car? No, ___.`,`he doesn't`,`he don't`,`he hasn't`,`he isn't`,`עם he: he doesn't.`],
+  [`איזה משפט נכון?`,`Does he work here?`,`Does he works here?`,`Do he work here?`,`Is he work here?`,`אחרי Does פועל בלי s.`],
+  [`What time ___ you wake up?`,`do`,`does`,`are`,`is`,`עם you: do.`],
+  [`Where ___ she work?`,`does`,`do`,`is`,`are`,`עם she: does.`],
+  [`איזה משפט נכון?`,`He is always late.`,`He always is late.`,`He always are late.`,`Always he is late.`,`אחרי to be באה תדירות.`],
+  [`I ___ go to the gym on Saturday. (אף פעם)`,`never`,`don't never`,`not`,`no`,`never בלי don't.`],
+  [`She ___ eats breakfast. (לפעמים)`,`sometimes`,`sometime`,`some time`,`sometimes is`,`sometimes לפני הפועל.`],
+  [`How ___ you go to work?`,`do`,`does`,`are`,`is`,`עם you: do.`]
+ ]}
+];
+UNITS.forEach(u=>{u.bank=u.bank.map(Q)});
+const SOON=['שאלות עם What / Where / When / Why / How לעומק','יש לי / אין לי (have got), רצון ויכולת (can, want to)','עבר פשוט: מה עשיתי אתמול','עתיד: going to ו-will','מילות יחס: in, on, at, to, from','מסעדה ובית קפה, קניות, מלון ושדה תעופה, הגעה ותשלום'];
+
+/* ===== homework + summaries ===== */
+const F=(q,...a)=>({k:'f',q,a});
+const S=(q,a)=>({k:'f',q,a:[a],s:1});
+const M=(q,c,...w)=>({k:'m',q,c,w});
+const W=(q,m)=>({k:'w',q,m});
+const HW={
+u1:[
+ {t:'כינויי גוף',d:`השלם את הכינוי המתאים: I, you, he, she, it, we, they.`,i:[
+  F(`Dan is my brother. ___ is a student.`,`He`),
+  F(`Maya is my sister. ___ is a teacher.`,`She`),
+  F(`The book is new. ___ is blue.`,`It`),
+  F(`Dan and Maya are friends. ___ are happy.`,`They`),
+  F(`Tom and I are at home. ___ are tired.`,`We`),
+  F(`Rina and Noa are sisters. ___ are nice.`,`They`),
+  F(`My dog is small. ___ is cute.`,`It`),
+  F(`My father is a doctor. ___ is tall.`,`He`),
+  F(`You and I are friends. ___ are friends.`,`We`),
+  F(`כתוב באנגלית: אני`,`I`),
+  F(`כתוב באנגלית: אנחנו`,`we`),
+  F(`כתוב באנגלית: זה (חפץ)`,`it`)]},
+ {t:'מילות שייכות',d:`השלם: my, your, his, her, its, our, their.`,i:[
+  F(`This is ___ phone. (הטלפון שלי)`,`my`),
+  F(`Dan has a car. ___ car is red.`,`His`),
+  F(`Maya has a bag. ___ bag is black.`,`Her`),
+  F(`You have a house. ___ house is big.`,`Your`),
+  F(`We have a dog. ___ dog is small.`,`Our`),
+  F(`They have a teacher. ___ teacher is nice.`,`Their`),
+  F(`The cat is hungry. ___ food is here.`,`Its`),
+  M(`Dan and Rina are my parents. ___ house is in Haifa.`,`Their`,`His`,`Her`,`Our`),
+  M(`I love ___ family. (המשפחה שלי)`,`my`,`I`,`your`,`his`),
+  F(`כתוב באנגלית: שלך`,`your`),
+  F(`כתוב באנגלית: שלהם`,`their`),
+  F(`כתוב באנגלית: שלנו`,`our`)]},
+ {t:'ערבוב ויישום',d:`בחר את התשובה הנכונה, ובסוף כתוב בעצמך.`,i:[
+  M(`איזה כינוי מחליף: Tom and Dan?`,`They`,`We`,`He`,`It`),
+  M(`איזה כינוי מחליף: my mother?`,`She`,`He`,`It`,`They`),
+  M(`איזה כינוי מחליף: the table?`,`It`,`He`,`She`,`They`),
+  M(`איזה כינוי מחליף: you and me?`,`We`,`You`,`They`,`He`),
+  M(`איזה משפט נכון?`,`Her name is Rina.`,`She name is Rina.`,`Hers name is Rina.`,`Hers is name Rina.`),
+  M(`איזה משפט נכון?`,`Our friends are nice.`,`We friends are nice.`,`Us friends are nice.`,`Ours friends are nice.`),
+  F(`My brother has a phone. ___ phone is new.`,`His`),
+  F(`My sisters have a house. ___ house is big.`,`Their`),
+  F(`My friend Maya has a dog. ___ dog is big.`,`Her`),
+  W(`כתוב 3 אנשים מהמשפחה או מהחברים שלך באנגלית (למשל: my mother, my friend).`,`my mother, my father, my brother`)]}
+],
+u2:[
+ {t:'am / is / are',d:`כתוב את הצורה הנכונה של to be: am, is או are.`,i:[
+  F(`I ___ a student.`,`am`),F(`She ___ my friend.`,`is`),F(`We ___ at home.`,`are`),F(`They ___ tired.`,`are`),
+  F(`He ___ a teacher.`,`is`),F(`The book ___ on the table.`,`is`),F(`You ___ very nice.`,`are`),F(`My parents ___ at work.`,`are`),
+  F(`Dan and I ___ friends.`,`are`),F(`It ___ a big city.`,`is`),F(`The children ___ happy.`,`are`),F(`I ___ from Israel.`,`am`)]},
+ {t:'קיצורים ותרגום',d:`בחלק הראשון כתוב את הצורה המקוצרת (עם גרש). בחלק השני תרגם לאנגלית.`,i:[
+  S(`I am →`,`I'm`),S(`She is →`,`She's`),S(`They are →`,`They're`),S(`We are →`,`We're`),S(`He is →`,`He's`),S(`You are →`,`You're`),S(`It is →`,`It's`),
+  F(`אני עייף`,`I am tired`),F(`הוא בבית`,`He is at home`),F(`אנחנו חברים`,`We are friends`),F(`הם מוכנים`,`They are ready`),F(`אני רעב`,`I am hungry`),F(`היא שמחה`,`She is happy`)]},
+ {t:'לבנות משפטים',d:`סדר את המילים למשפט נכון. התחל באות גדולה וסיים בנקודה.`,i:[
+  F(`student / a / I / am`,`I am a student`),F(`is / my / name / Tom`,`My name is Tom`),F(`from / am / Israel / I`,`I am from Israel`),
+  F(`are / ready / we`,`We are ready`),F(`at / is / he / work`,`He is at work`),F(`tired / they / are / very`,`They are very tired`),
+  F(`is / nice / she / very`,`She is very nice`),F(`old / I / 24 / years / am`,`I am 24 years old`),
+  M(`איזה משפט נכון?`,`She's a teacher.`,`She are a teacher.`,`She am a teacher.`,`She be a teacher.`),
+  W(`הצג את עצמך ב-4 משפטים: שם, גיל, מאיפה אתה, איך אתה מרגיש עכשיו.`,`My name is Tom. I am 24 years old. I am from Israel. I am fine.`)]}
+],
+u3:[
+ {t:'שלילה',d:`הפוך כל משפט לשלילי (not). כתוב את המשפט המלא.`,i:[
+  F(`I am happy.`,`I am not happy`),F(`He is at home.`,`He is not at home`),F(`They are late.`,`They are not late`),F(`She is my sister.`,`She is not my sister`),
+  F(`We are ready.`,`We are not ready`),F(`You are tired.`,`You are not tired`),F(`It is expensive.`,`It is not expensive`),
+  F(`My parents are at work.`,`My parents are not at work`),F(`The door is open.`,`The door is not open`),F(`I am hungry.`,`I am not hungry`)]},
+ {t:'שאלות ותשובות קצרות',d:`הפוך משפט לשאלה. בסוף השלם תשובות קצרות.`,i:[
+  F(`You are ready.`,`Are you ready`),F(`He is a teacher.`,`Is he a teacher`),F(`They are friends.`,`Are they friends`),F(`She is at home.`,`Is she at home`),
+  F(`I am late.`,`Am I late`),F(`It is far.`,`Is it far`),
+  F(`Are you tired? Yes, ___.`,`I am`),F(`Is she nice? No, ___.`,`she is not`),F(`Are they at home? Yes, ___.`,`they are`),F(`Is he your brother? No, ___.`,`he is not`)]},
+ {t:'מילות שאלה ושיחה',d:`כתוב את השאלה באנגלית.`,i:[
+  F(`מה שמך?`,`What is your name`),F(`מאיפה אתה?`,`Where are you from`),F(`מה שלומך?`,`How are you`),F(`איפה הטלפון שלי?`,`Where is my phone`),
+  F(`מי הוא?`,`Who is he`),F(`מה זה?`,`What is this`),F(`למה אתה עייף?`,`Why are you tired`),
+  M(`מישהו אומר Thank you. מה עונים?`,`You're welcome.`,`I'm welcome.`,`Please.`,`Sorry.`),
+  M(`דרסת למישהו על הרגל. מה אומרים?`,`Sorry!`,`Thank you!`,`Welcome!`,`Hello!`),
+  W(`כתוב שיחת היכרות קצרה בין שני אנשים: שלום, שם, נעים להכיר, מאיפה אתה.`,`Hello! My name is Tom. - Hi, I'm Dan. Nice to meet you. - Where are you from? - I'm from Israel.`)]}
+],
+u4:[
+ {t:'this / that / these / those',d:`בחר ופעל לפי הסוגריים: קרוב או רחוק, אחד או כמה.`,i:[
+  F(`___ is my pen. (ביד שלי)`,`This`),F(`___ are my shoes. (על הרגליים שלי)`,`These`),F(`___ is a big house. (רחוק)`,`That`),
+  F(`___ are my friends. (רחוקים)`,`Those`),F(`___ is a cat. (קרוב)`,`This`),F(`___ are apples. (קרובים)`,`These`),
+  F(`What is ___? (קרוב, אחד)`,`this`),F(`What are ___? (רחוק, כמה)`,`those`),
+  M(`Is ___ your car? (שם, רחוק)`,`that`,`this`,`these`,`those`),M(`___ keys are mine. (בידי)`,`These`,`This`,`That`,`Those`)]},
+ {t:'a / an ורבים',d:`חלק א: a או an. חלק ב: כתוב את הרבים.`,i:[
+  F(`___ egg`,`an`),F(`___ banana`,`a`),F(`___ chair`,`a`),F(`___ idea`,`an`),F(`___ orange`,`an`),F(`___ window`,`a`),F(`___ apple`,`an`),F(`___ desk`,`a`),
+  F(`book →`,`books`),F(`box →`,`boxes`),F(`city →`,`cities`),F(`man →`,`men`),F(`child →`,`children`),F(`bus →`,`buses`),F(`key →`,`keys`),F(`woman →`,`women`)]},
+ {t:'there is / there are ותרגום',d:`השלם, סדר מילים ותרגם.`,i:[
+  F(`There ___ a book on the table.`,`is`),F(`There ___ two chairs.`,`are`),F(`There ___ three keys here.`,`are`),F(`There ___ a phone on the bed.`,`is`),
+  F(`chair / is / there / a / here`,`There is a chair here`),F(`there / two / are / windows`,`There are two windows`),
+  F(`יש דלת?`,`Is there a door`),F(`יש שני ספרים`,`There are two books`),F(`זה עט`,`This is a pen`),F(`אלה מפתחות`,`These are keys`),
+  W(`תאר את החדר שלך ב-3 משפטים עם There is / There are.`,`There is a bed. There is a table. There are two chairs.`)]}
+],
+u5:[
+ {t:'מספרים',d:`כתוב את המספר באנגלית במילים.`,i:[
+  F(`3`,`three`),F(`8`,`eight`),F(`12`,`twelve`),F(`15`,`fifteen`),F(`20`,`twenty`),F(`30`,`thirty`),
+  F(`45`,`forty-five`),F(`50`,`fifty`),F(`67`,`sixty-seven`),F(`99`,`ninety-nine`),F(`100`,`one hundred`),F(`16`,`sixteen`)]},
+ {t:'ימים ומילות יחס',d:`ימים, יחס זמן (on / at / in) ותרגום.`,i:[
+  F(`The day after Tuesday:`,`Wednesday`),F(`The day before Sunday:`,`Saturday`),F(`The day after Thursday:`,`Friday`),F(`The day before Wednesday:`,`Tuesday`),
+  F(`מחר`,`tomorrow`),F(`אתמול`,`yesterday`),F(`היום`,`today`),
+  F(`The meeting is ___ Monday.`,`on`),F(`The film is ___ 8 o'clock.`,`at`),F(`My birthday is ___ May.`,`in`),
+  F(`I wake up ___ 6:30.`,`at`),F(`We eat dinner ___ the evening.`,`in`)]},
+ {t:'השעה',d:`כתוב באנגלית באיזו שעה אנחנו. למשל 3:00 = It is three o'clock.`,i:[
+  F(`3:00`,`It is three o'clock`),F(`5:30`,`It is half past five`),F(`7:15`,`It is quarter past seven`),F(`9:45`,`It is quarter to ten`),
+  F(`4:10`,`It is ten past four`),F(`2:20`,`It is twenty past two`),
+  F(`איך שואלים מה השעה?`,`What time is it`),F(`איך שואלים באיזו שעה הפגישה?`,`What time is the meeting`),
+  M(`מה השעה 6:30?`,`It's half past six.`,`It's half to six.`,`It's quarter past six.`,`It's six and ten.`),
+  W(`כתוב באנגלית באיזו שעה אתה מתעורר, אוכל ארוחת ערב ונכנס לישון.`,`I wake up at six thirty. I eat dinner at eight. I go to sleep at eleven.`)]}
+],
+u6:[
+ {t:'צורת הפועל (s)',d:`כתוב את הפועל שבסוגריים בצורה הנכונה.`,i:[
+  F(`I (work) ___ in Tel Aviv.`,`work`),F(`He (work) ___ in Haifa.`,`works`),F(`She (live) ___ in Jerusalem.`,`lives`),F(`They (play) ___ basketball.`,`play`),
+  F(`My brother (watch) ___ TV every night.`,`watches`),F(`We (eat) ___ lunch at one.`,`eat`),F(`She (study) ___ English.`,`studies`),
+  F(`He (go) ___ to the gym.`,`goes`),F(`My mother (have) ___ a car.`,`has`),F(`You (speak) ___ English very well.`,`speak`),
+  F(`The bus (stop) ___ here.`,`stops`),F(`Dan (drink) ___ coffee.`,`drinks`)]},
+ {t:'תרגום משפטים',d:`תרגם לאנגלית. כתוב משפט שלם.`,i:[
+  F(`אני אוהב קפה`,`I like coffee`),F(`היא עובדת בבית חולים`,`She works at a hospital`,`She works in a hospital`),
+  F(`אנחנו גרים בירושלים`,`We live in Jerusalem`),F(`הם משחקים כדורסל`,`They play basketball`),
+  F(`הוא צריך טלפון חדש`,`He needs a new phone`),F(`אני רוצה מים`,`I want water`,`I want some water`),
+  F(`היא לומדת אנגלית`,`She studies English`),F(`אנחנו אוכלים ארוחת ערב בשמונה`,`We eat dinner at eight`),
+  F(`אחי נוהג במכונית`,`My brother drives a car`),F(`יש לי מכונית`,`I have a car`)]},
+ {t:'מצא את הטעות',d:`בכל משפט יש טעות. כתוב את המשפט מחדש בצורה נכונה.`,i:[
+  F(`He work in Haifa.`,`He works in Haifa`),F(`She like coffee.`,`She likes coffee`),F(`I am live in Israel.`,`I live in Israel`),
+  F(`They plays football.`,`They play football`),F(`My mother have a car.`,`My mother has a car`),F(`He studys English.`,`He studies English`),
+  F(`She watch TV.`,`She watches TV`),F(`I likes pizza.`,`I like pizza`),F(`He go to work.`,`He goes to work`),
+  W(`כתוב 4 משפטים על השגרה שלך: I wake up..., I work..., I eat..., I go...`,`I wake up at six. I work in Tel Aviv. I eat dinner at eight. I go to the gym on Sunday.`)]}
+],
+u7:[
+ {t:'שלילה',d:`הפוך לשלילי עם do not / does not. כתוב משפט שלם.`,i:[
+  F(`I like tea.`,`I do not like tea`),F(`She likes tea.`,`She does not like tea`),F(`They work on Friday.`,`They do not work on Friday`),
+  F(`He drinks coffee.`,`He does not drink coffee`),F(`We have a car.`,`We do not have a car`),F(`My mother speaks French.`,`My mother does not speak French`),
+  F(`I eat meat.`,`I do not eat meat`),F(`She lives in Haifa.`,`She does not live in Haifa`),F(`The shop opens at six.`,`The shop does not open at six`),
+  F(`You know him.`,`You do not know him`)]},
+ {t:'שאלות',d:`הפוך לשאלה, סדר מילים והשלם תשובות קצרות.`,i:[
+  F(`You like pizza.`,`Do you like pizza`),F(`He works here.`,`Does he work here`),F(`She lives in Haifa.`,`Does she live in Haifa`),F(`They play football.`,`Do they play football`),
+  F(`Do you speak English? Yes, ___.`,`I do`),F(`Does he have a car? No, ___.`,`he does not`),
+  F(`where / do / you / live`,`Where do you live`),F(`time / what / the / does / meeting / start`,`What time does the meeting start`),
+  F(`how / go / to / do / you / work`,`How do you go to work`),F(`she / does / what / do`,`What does she do`)]},
+ {t:'מילות תדירות',d:`always, usually, often, sometimes, never. שים לב למיקום המילה.`,i:[
+  F(`I ___ wake up at six. (תמיד)`,`always`),F(`She ___ eats breakfast. (בדרך כלל)`,`usually`),F(`We ___ go to the gym. (לפעמים)`,`sometimes`),
+  F(`I ___ drink tea. (אף פעם)`,`never`),F(`He is ___ late. (תמיד)`,`always`),
+  F(`always / I / coffee / drink`,`I always drink coffee`),F(`is / never / she / late`,`She is never late`),F(`sometimes / we / play / football`,`We sometimes play football`),
+  F(`אני אף פעם לא אוכל בשר`,`I never eat meat`),F(`היא תמיד מאחרת`,`She is always late`)]},
+ {t:'דף חזרה: יחידות 1-7',d:`שאלות מכל מה שלמדת. זה הדף שמכין למבחן.`,i:[
+  F(`Dan and I are friends. ___ are happy.`,`We`),F(`My sister is a nurse. ___ works at a hospital.`,`She`),F(`This ___ my phone.`,`is`),F(`There ___ two chairs here.`,`are`),
+  F(`He (work) ___ in Haifa.`,`works`),F(`He ___ tea. (לא אוהב)`,`does not like`),F(`What time ___ it?`,`is`),F(`___ she live here?`,`Does`),
+  F(`אנחנו לא עייפים`,`We are not tired`),F(`היא לא גרה בחיפה`,`She does not live in Haifa`),
+  W(`כתוב פסקה קצרה (5 משפטים) על עצמך: שם, מאיפה אתה, איפה אתה עובד, מה אתה אוהב ומה אתה אף פעם לא עושה.`,`My name is Tom. I am from Israel. I work in a factory. I like basketball. I never drink tea.`)]}
+]};
+UNITS.forEach(u=>{u.hw=HW[u.id]});
+/* summary pages */
+const SUM={
+u1:`<p>אלה הדברים החשובים מהיחידה. קרא אותם לפני התרגול.</p>
+ <ul><li><b>I, you, he, she, it, we, they</b>: מי עושה.</li><li><b>he</b> גבר, <b>she</b> אישה, <b>it</b> חפץ או חיה, <b>they</b> כמה.</li><li><b>my, your, his, her, its, our, their</b>: של מי. הן באות לפני הדבר.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> לכתוב i באות קטנה. להגיד ״he״ על חפץ (צריך it). לבלבל I עם my ו-we עם our.</div>`,
+u2:`<p>הפועל to be הוא הבסיס של הכל.</p>
+ ${TBL(['I','he / she / it','you / we / they'],[['am','is','are']])}
+ <ul><li>קיצורים: I'm, he's, she's, it's, we're, they're, you're.</li><li>חייבים פועל: <b>I am tired</b>.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״I tired״ (חסר am). ״He are״ (צריך is). ״They is״ (צריך are).</div>`,
+u3:`<ul><li>שלילה: to be + <b>not</b>. I am not, he isn't, they aren't.</li><li>שאלה: to be עולה לפני הכינוי. <b>Are you ready?</b></li><li>תשובה קצרה: Yes, I am. / No, he isn't.</li><li>מילות שאלה: what, who, where, when, why, how.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״Yes, he's״ (צריך Yes, he is). ״amn't״ (אין כזה, אומרים I'm not). ״You ready?״ בלי Are.</div>`,
+u4:`<ul><li>קרוב: <b>this / these</b>. רחוק: <b>that / those</b>.</li><li><b>a</b> לפני צליל עיצור, <b>an</b> לפני צליל תנועה.</li><li>רבים: s, es, ies, ובחריגים men, women, children, people.</li><li><b>There is</b> + אחד. <b>There are</b> + כמה.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״a apple״ (צריך an). ״two book״ (צריך books). ״There is two chairs״ (צריך are).</div>`,
+u5:`<ul><li>13-19 נגמרים ב-teen, 20-90 ב-ty. שים לב להטעמה.</li><li>on + יום, at + שעה, in + חודש / בוקר / ערב.</li><li>שעה: o'clock, half past, quarter past, quarter to.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> לבלבל fifteen עם fifty. ״in Monday״ (צריך on). ״on 5 o'clock״ (צריך at).</div>`,
+u6:`<ul><li>הווה פשוט: הרגלים, שגרה ועובדות.</li><li>הפועל נשאר רגיל, ורק ב-<b>he / she / it</b> מוסיפים <b>s / es / ies</b>.</li><li>have הופך ל-<b>has</b>, go ל-<b>goes</b>, do ל-<b>does</b>.</li><li>לא משתמשים ב-to be לפני פועל רגיל.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״He work״. ״I am work״. ״She have״. ״He studys״.</div>`,
+u7:`<ul><li>שלילה: <b>don't</b> (I, you, we, they) ו-<b>doesn't</b> (he, she, it) + פועל רגיל.</li><li>שאלה: <b>Do / Does</b> + כינוי + פועל רגיל.</li><li>אחרי does / doesn't הפועל <b>בלי s</b>.</li><li>תדירות: לפני פועל רגיל, אחרי to be.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״Does he works?״. ״He don't like״. ״I don't never go״. ״He always is late״.</div>`};
+UNITS.forEach(u=>u.lessons.push({t:'סיכום ושגיאות נפוצות',h:SUM[u.id]}));
+/* ===== state ===== */
+const KEY='eng_progress_v1';
+let prog={};
+try{prog=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){prog={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(prog))}catch(e){}}
+const P=id=>{const p=prog[id]||(prog[id]={vq:0,t:0,pr:0});if(!p.hw)p.hw={};return p};
+const unlocked=i=>i===0||(prog[UNITS[i-1].id]&&prog[UNITS[i-1].id].t>=100);
+const hwDone=u=>{const p=P(u.id);return u.hw.every((_,k)=>p.hw[k]&&p.hw[k].c)};
+let view={name:'home'},resetArm=false,run=null;
+const app=document.getElementById('app');
+const NAMES={lesson:'הסבר',vocab:'אוצר מילים',vq:'בחינת מילים',practice:'תרגול',hw:'שיעורי בית',test:'מבחן סיום'};
+
+/* answer checking */
+const CON={"i'm":'i am',"you're":'you are',"he's":'he is',"she's":'she is',"it's":'it is',"we're":'we are',"they're":'they are',"isn't":'is not',"aren't":'are not',"don't":'do not',"doesn't":'does not',"what's":'what is',"where's":'where is',"who's":'who is',"there's":'there is',"that's":'that is',"how's":'how is'};
+function norm(s,strict){
+  s=String(s||'').toLowerCase().replace(/[’‘`´]/g,"'").replace(/[-–]/g,' ').replace(/[.,!?;:"]/g,' ').replace(/\s+/g,' ').trim();
+  if(!strict)s=s.split(' ').map(w=>CON[w]||w).join(' ');
+  return s;
+}
+const isOk=(it,v)=>it.k==='m'?v===it.c:it.a.some(x=>norm(x,it.s)===norm(v,it.s));
+
+/* ===== frames ===== */
+const topbar=()=>`<header class="top"><button class="homebtn" data-home>תוכן עניינים</button><span class="brand">אנגלית מהבסיס</span></header>`;
+function frame(i,tab,body){
+  view.i=i;view.tab=tab;
+  const u=UNITS[i],p=P(u.id);
+  const st={lesson:p.read,vocab:p.voc,vq:p.vq>=90,practice:p.pr,hw:hwDone(u),test:p.t>=100};
+  const tabs=Object.keys(NAMES).map((k,x)=>`<button class="tab ${k===tab?'on':''}" data-tab="${k}"><span class="tn">${x+1}</span>${NAMES[k]}${st[k]?'<span class="tick" aria-label="הושלם">&#10003;</span>':''}</button>`).join('');
+  app.innerHTML=`${topbar()}<div class="wrap"><nav class="tabs">${tabs}</nav><main class="sheet"><div class="ubadge">יחידה ${i+1}</div><h1 class="utitle">${u.name}</h1><div class="usub">${esc(u.en)}</div>${body}</main></div>`;
+  window.scrollTo(0,0);
+}
+const chip=(ok,txt)=>`<span class="chip ${ok?'ok':'todo'}">${txt}</span>`;
+function home(){
+  view={name:'home'};
+  const done=UNITS.filter(u=>P(u.id).t>=100).length;
+  const rows=UNITS.map((u,i)=>{
+    const p=P(u.id),open=unlocked(i);
+    return `<button ${open?`data-unit="${i}"`:'disabled'}><span class="tn" style="width:34px;height:34px;font-size:16px;color:var(--pen)">${i+1}</span><span class="nm">${u.name}<small>${esc(u.en)}</small></span>
+     <span class="chips">${open?`${chip(p.vq>=90,'מילים '+(p.vq||'-'))} ${chip(hwDone(u),'שיעורי בית')} ${chip(p.t>=100,'מבחן '+(p.t||'-'))}`:'<span class="chip todo">נעול</span>'}</span></button>`}).join('');
+  app.innerHTML=`${topbar()}<div class="wrap"><main class="sheet" style="border-top:1.5px solid var(--rule);margin-top:14px">
+   <div class="hero"><h1>אנגלית מהבסיס</h1><p class="lead">חוברת לימוד לאנגלית יומיומית, מאפס. כל יחידה בנויה כך: הסבר, אוצר מילים, בחינת מילים (90 לפחות), תרגול, שיעורי בית ומבחן סיום (100 כדי להמשיך ליחידה הבאה).</p></div>
+   <div class="note"><b>איך לומדים?</b> קוראים את ההסבר, שומעים כל משפט (כפתור הרמקול), כותבים את שיעורי הבית, ורק אז ניגשים למבחן. כך מגיעים ל-100.</div>
+   <h2>תוכן עניינים</h2><div class="toc">${rows}</div>
+   <p class="sub">הושלמו ${done} מתוך ${UNITS.length} יחידות.</p>
+   <h3>בדרך</h3><ul class="sub">${SOON.map(s=>`<li>${s}</li>`).join('')}</ul>
+   <button class="linkbtn" data-reset>${resetArm?'לחץ שוב כדי למחוק את כל ההתקדמות והתשובות':'איפוס התקדמות'}</button></main></div>`;
+  window.scrollTo(0,0);
+}
+function openTab(i,tab,opt){
+  opt=opt||{};
+  view={name:'unit',i,tab,n:opt.n||0,hp:opt.hp||0};
+  ({lesson:lesson,vocab:vocab,vq:m=>intro(m,'vq'),practice:m=>intro(m,'practice'),hw:hw,test:m=>intro(m,'test')})[tab](i);
+}
+function lesson(i){
+  const u=UNITS[i],n=view.n,pg=u.lessons[n],last=n===u.lessons.length-1;
+  const pager=u.lessons.map((l,k)=>`<button class="pg ${k===n?'on':''}" data-lp="${k}" title="${esc(l.t)}">${k+1}</button>`).join('');
+  frame(i,'lesson',`<div class="pager"><span class="sub">עמוד</span>${pager}</div>
+   <div class="page"><h2>${pg.t}</h2>${pg.h}</div>
+   <div class="btns">${n>0?'<button class="btn ghost" data-pg="-1">הקודם</button>':''}<button class="btn" data-pg="1">${last?'סיימתי. לאוצר המילים':'הבא'}</button></div>`);
+}
+function vocab(i){
+  const u=UNITS[i];
+  frame(i,'vocab',`<p class="lead">לחץ על הרמקול כדי לשמוע כל מילה. חזור עליה בקול. כשאתה מוכן, עבור לבחינת המילים.</p>
+   <div class="vgrid">${u.vocab.map(v=>`<div class="vitem">${spkBtn(v[0])}<div class="en">${esc(v[0])}</div><div class="he">${v[1]}</div></div>`).join('')}</div>
+   <div class="btns"><button class="btn" data-tab="vq">לבחינת המילים</button></div>`);
+  P(u.id).voc=1;save();
+}
+function intro(i,mode){
+  const u=UNITS[i],p=P(u.id);let b;
+  if(mode==='test'&&p.vq<90){
+    b=`<div class="note"><b>המבחן עדיין נעול.</b> צריך קודם ציון 90 לפחות בבחינת המילים. הציון שלך כרגע: ${p.vq||'-'}.</div><div class="btns"><button class="btn" data-tab="vq">לבחינת המילים</button></div>`;
+  }else{
+    const t={vq:[`בחינת המילים`,`${u.vocab.length} שאלות על אוצר המילים של היחידה, חלקן מאנגלית לעברית וחלקן להפך. כדי לעבור צריך <b>90 לפחות</b>. אפשר לנסות שוב כמה פעמים שרוצים. הציון הטוב ביותר שלך: ${p.vq||'-'}.`],
+      practice:[`תרגול`,`${u.bank.length} שאלות. אחרי כל תשובה תראה מיד אם צדקת ומה ההסבר. אין ציון, זה בשביל ללמוד.`],
+      test:[`מבחן סיום`,`15 שאלות שנבחרות אקראית מתוך המאגר של היחידה. כדי להמשיך ליחידה הבאה צריך <b>100</b>. אם טעית, תראה מה לתקן ותוכל לנסות שוב עם שאלות חדשות. הציון הטוב ביותר שלך: ${p.t||'-'}.`]}[mode];
+    b=`<h2>${t[0]}</h2><p>${t[1]}</p><div class="btns"><button class="btn" data-start="${mode}">התחל</button></div>`;
+  }
+  frame(i,mode,b);
+}
+/* ===== homework ===== */
+function hwState(u,k){const p=P(u.id);return p.hw[k]||(p.hw[k]={v:[],o:{},c:0,s:0,t:0})}
+function hw(i){
+  const u=UNITS[i],hp=view.hp,pg=u.hw[hp],st=hwState(u,hp),p=P(u.id);
+  const sel=u.hw.map((x,k)=>{const s=p.hw[k];return `<button class="pg ${k===hp?'on':''}" data-hp="${k}">עמוד ${k+1}${s&&s.c?`<span class="sc" dir="ltr">(${s.s}/${s.t})</span>`:''}</button>`}).join('');
+  const items=pg.i.map((it,k)=>{
+    const v=st.v[k]||'';let inner;
+    const ok=st.c&&it.k!=='w'?isOk(it,v):null;
+    if(it.k==='f'){
+      const cls=st.c?(ok?'ok-in':'no-in'):'';
+      const inp=cls0=>`<input class="${cls0} ${cls}" data-i="${k}" value="${esc(v)}" ${st.c?'disabled':''} autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="תשובה ${k+1}">`;
+      const ans=st.c&&!ok?`<span class="ans">${esc(it.a[0])}</span>`:'';
+      if(it.q.includes('___')){const [a,b]=it.q.split('___');inner=`<div class="q" dir="auto">${esc(a)}${inp('blank')}${ans}${esc(b)}</div>`}
+      else inner=`<div class="q" dir="auto">${esc(it.q)}</div><div>${inp('full')}${ans}</div>`;
+    }else if(it.k==='m'){
+      if(!st.o[k])st.o[k]=shuffle([it.c,...it.w]);
+      const opts=st.o[k].map((o,j)=>{let c='mopt';if(st.c){c+=o===it.c?' right':(o===v?' wrong':'')}else if(o===v)c+=' picked';
+        return `<button class="${c}" data-hm="${k}:${j}" ${st.c?'disabled':''} dir="auto">${esc(o)}</button>`}).join('');
+      inner=`<div class="q" dir="auto">${esc(it.q)}</div><div class="mrow">${opts}</div>`;
+    }else{
+      inner=`<div class="q" dir="auto">${esc(it.q)}</div><textarea class="full" data-i="${k}" rows="3" spellcheck="false" aria-label="כתיבה חופשית">${esc(v)}</textarea>${st.c?`<div class="model"><b>דוגמה לתשובה:</b> ${esc(it.m)}</div>`:''}`;
+    }
+    return `<div class="item"><span class="n">${k+1}.</span><div class="body">${inner}</div></div>`}).join('');
+  const total=pg.i.filter(x=>x.k!=='w').length;
+  const res=st.c?`<div class="result"><span>ענית נכון על ${st.s} מתוך ${st.t}</span><span class="btns"><button class="btn ghost" data-hfix>תקן רק את הטעויות</button><button class="btn ghost" data-hreset>התחל את העמוד מחדש</button></span></div>`:'';
+  frame(i,'hw',`<div class="pager"><span class="sub">עמוד</span>${sel}</div>
+   <div class="hwhead"><span>שיעורי בית: ${pg.t}</span><span>${hp+1} / ${u.hw.length}</span></div>
+   <p>${pg.d}</p><div class="items">${items}</div>${res}
+   <div class="btns">${st.c?'':`<button class="btn" data-hcheck>בדוק את העמוד</button>`}${hp<u.hw.length-1?`<button class="btn ghost" data-hp="${hp+1}">לעמוד הבא</button>`:`<button class="btn ghost" data-tab="test">למבחן הסיום</button>`}</div>
+   <p class="sub">כתיבה באנגלית: אותיות גדולות וקטנות ופיסוק לא משנים. קיצורים כמו I'm ו-I am מתקבלים שניהם (חוץ מבתרגילי קיצור).</p>`);
+}
+function hwCheck(){
+  const u=UNITS[view.i],pg=u.hw[view.hp],st=hwState(u,view.hp);
+  let s=0,t=0;
+  pg.i.forEach((it,k)=>{if(it.k==='w')return;t++;if(isOk(it,st.v[k]||''))s++});
+  st.c=1;st.s=s;st.t=t;save();hw(view.i);
+}
+/* ===== quizzes ===== */
+function vocabQs(u){
+  const pool=u.vocab;
+  return shuffle(pool.map((_,k)=>k)).map((k,j)=>{
+    const [en,he]=pool[k],toHe=j%2===0;
+    const wr=shuffle(pool.filter((_,x)=>x!==k)).slice(0,3);
+    return toHe?{p:en,speak:en,c:he,w:wr.map(x=>x[1]),e:`${en} = ${he}`}:{p:he,c:en,w:wr.map(x=>x[0]),e:`${en} = ${he}`};
+  });
+}
+function startRun(i,mode){
+  const u=UNITS[i];let qs;
+  if(mode==='vq')qs=vocabQs(u);else if(mode==='test')qs=shuffle(u.bank).slice(0,15);else qs=shuffle(u.bank);
+  run={i,mode,qs:qs.map(q=>({...q,opts:shuffle([q.c,...q.w])})),n:0,ans:[],fb:false};
+  view={name:'unit',i,tab:mode,n:0,hp:0};
+  quiz();
+}
+function quiz(){
+  const {qs,n,mode,fb,i}=run,q=qs[n],pick=run.ans[n],instant=mode==='practice';
+  const opts=q.opts.map((o,k)=>{
+    let cls='opt';
+    if(instant&&fb){cls+=o===q.c?' right':(o===pick?' wrong':'')}else if(pick===o)cls+=' picked';
+    return `<button class="${cls}" dir="auto" data-pick="${k}" ${instant&&fb?'disabled':''}>${esc(o)}</button>`}).join('');
+  frame(i,mode,`<div class="qhead"><span>שאלה ${n+1} מתוך ${qs.length}</span><span>${NAMES[mode]}</span></div>
+   <div class="bar"><i style="width:${n/qs.length*100}%"></i></div>
+   <div class="qp" dir="auto">${q.speak?spkBtn(q.speak):''}<span>${esc(q.p)}</span></div>
+   <div class="opts">${opts}</div>
+   ${instant&&fb?`<div class="fb ${pick===q.c?'ok':'no'}">${pick===q.c?'נכון. ':'לא נכון. התשובה: <b dir="ltr">'+esc(q.c)+'</b>. '}${esc(q.e)}</div>`:''}
+   <div class="btns"><button class="btn" data-next ${pick===undefined?'disabled':''}>${instant&&!fb?'בדוק':(n===qs.length-1?'סיום':'הבא')}</button></div>`);
+}
+function finish(){
+  const {qs,ans,mode,i}=run,u=UNITS[i],p=P(u.id);
+  const ok=qs.filter((q,k)=>ans[k]===q.c).length,pct=Math.round(ok/qs.length*100);
+  const need=mode==='vq'?90:(mode==='test'?100:0),pass=pct>=need;
+  if(mode==='vq')p.vq=Math.max(p.vq,pct);
+  if(mode==='test')p.t=Math.max(p.t,pct);
+  if(mode==='practice')p.pr=1;
+  save();
+  const wrong=qs.map((q,k)=>({q,a:ans[k]})).filter(x=>x.a!==x.q.c);
+  const msg=mode==='practice'?`ענית נכון על ${ok} מתוך ${qs.length}. אפשר לחזור על התרגול כמה שרוצים.`
+    :pass?(mode==='test'?'מעולה. ציון מושלם. היחידה הבאה נפתחה.':'עברת. אפשר להמשיך לתרגול, לשיעורי הבית ולמבחן הסיום.')
+    :(mode==='test'?'צריך 100 כדי להמשיך. עבור על הטעויות ונסה שוב. השאלות מתחלפות.':'צריך 90 לפחות. עבור על הטעויות ונסה שוב.');
+  const nextBtn=pass&&mode==='test'&&i+1<UNITS.length?`<button class="btn" data-unit="${i+1}">ליחידה הבאה</button>`:'';
+  const nextTab=pass&&mode==='vq'?`<button class="btn" data-tab="practice">לתרגול</button>`:'';
+  frame(i,mode,`<div class="score ${mode==='practice'?'':pass?'ok':'no'}">${pct}</div><p class="center">${msg}</p>
+   <div class="btns">${nextBtn}${nextTab}${(!pass||mode==='practice')?`<button class="btn" data-again>${mode==='practice'?'עוד סיבוב':'נסה שוב'}</button>`:''}</div>
+   ${wrong.length?`<h3>מה לתקן (${wrong.length})</h3>`+wrong.map(x=>`<div class="rev"><div dir="auto"><b>${esc(x.q.p)}</b></div><div class="sub">התשובה שלך: <span dir="auto">${esc(x.a===undefined?'לא ענית':x.a)}</span></div><div class="sub" style="color:var(--green)">נכון: <b dir="auto">${esc(x.q.c)}</b></div><div class="sub">${esc(x.q.e)}</div></div>`).join(''):'<p class="center sub">בלי אף טעות.</p>'}`);
+}
+/* ===== events ===== */
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('button');if(!t)return;
+  const d=t.dataset;
+  if(d.s){speak(d.s);return}
+  if(t.hasAttribute('data-home')){resetArm=false;home();return}
+  if(d.unit!==undefined){openTab(+d.unit,'lesson');return}
+  if(t.hasAttribute('data-reset')){if(resetArm){prog={};save();resetArm=false}else resetArm=true;home();return}
+  if(d.tab){openTab(view.i,d.tab);return}
+  if(d.start){startRun(view.i,d.start);return}
+  if(d.lp!==undefined){view.n=+d.lp;lesson(view.i);return}
+  if(d.pg){
+    const u=UNITS[view.i],n=view.n+(+d.pg);
+    if(n>=u.lessons.length){P(u.id).read=1;save();openTab(view.i,'vocab')}else{view.n=n;lesson(view.i)}
+    return}
+  if(d.hp!==undefined){view.hp=+d.hp;hw(view.i);return}
+  if(d.hm){const [k,j]=d.hm.split(':').map(Number),u=UNITS[view.i],st=hwState(u,view.hp);st.v[k]=st.o[k][j];save();hw(view.i);return}
+  if(t.hasAttribute('data-hcheck')){hwCheck();return}
+  if(t.hasAttribute('data-hreset')){const u=UNITS[view.i];delete P(u.id).hw[view.hp];save();hw(view.i);return}
+  if(t.hasAttribute('data-hfix')){
+    const u=UNITS[view.i],pg=u.hw[view.hp],st=hwState(u,view.hp);
+    pg.i.forEach((it,k)=>{if(it.k!=='w'&&!isOk(it,st.v[k]||'')){st.v[k]='';delete st.o[k]}});
+    st.c=0;save();hw(view.i);return}
+  if(d.pick!==undefined){
+    if(run.mode==='practice'&&run.fb)return;
+    run.ans[run.n]=run.qs[run.n].opts[+d.pick];quiz();return}
+  if(t.hasAttribute('data-next')){
+    if(run.mode==='practice'&&!run.fb){run.fb=true;quiz();return}
+    run.fb=false;
+    if(run.n===run.qs.length-1)finish();else{run.n++;quiz()}
+    return}
+  if(t.hasAttribute('data-again')){startRun(run.i,run.mode);return}
+});
+document.addEventListener('input',ev=>{
+  const el=ev.target;if(el.dataset&&el.dataset.i!==undefined&&view.tab==='hw'){
+    const u=UNITS[view.i],st=hwState(u,view.hp);st.v[+el.dataset.i]=el.value;save()}
+});
+document.addEventListener('keydown',ev=>{
+  const el=ev.target;
+  if(ev.key==='Enter'&&el.tagName==='INPUT'&&el.dataset.i!==undefined){
+    ev.preventDefault();
+    const all=[...app.querySelectorAll('input[data-i],textarea[data-i]')],k=all.indexOf(el);
+    if(all[k+1])all[k+1].focus();return}
+  if(view.tab==='lesson'&&view.name==='unit'&&!/INPUT|TEXTAREA/.test(el.tagName)){
+    const u=UNITS[view.i];
+    if(ev.key==='ArrowLeft'&&view.n<u.lessons.length-1){view.n++;lesson(view.i)}
+    if(ev.key==='ArrowRight'&&view.n>0){view.n--;lesson(view.i)}}
+});
+home();
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+
+</body>
+</html>

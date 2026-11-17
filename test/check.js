@@ -23,5 +23,11 @@ ok(swVers.length >= 2 && swVers.every((v) => v === swVer), 'sw.js SHELL_FILES ?v
 for (const f of ['index.html', 'styles.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png']) ok(fs.existsSync(path.join(root, f)), `${f} exists`);
 try { JSON.parse(read('manifest.webmanifest')); ok(true, 'manifest is valid JSON'); } catch (e) { ok(false, 'manifest is valid JSON'); }
 
+// חוברת האנגלית (english/)
+try { execFileSync(process.execPath, ['--check', path.join(root, 'english/sw.js')]); ok(true, 'english/sw.js syntax'); }
+catch (e) { ok(false, `english/sw.js syntax\n${e.stderr}`); }
+for (const f of ['english/index.html', 'english/manifest.webmanifest', 'english/icon-192.png', 'english/icon-512.png']) ok(fs.existsSync(path.join(root, f)), `${f} exists`);
+try { JSON.parse(read('english/manifest.webmanifest')); ok(true, 'english manifest is valid JSON'); } catch (e) { ok(false, 'english manifest is valid JSON'); }
+
 console.log(fail ? `\n${fail} failed` : '\nall passed');
 process.exit(fail ? 1 : 0);
