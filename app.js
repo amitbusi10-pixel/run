@@ -886,6 +886,7 @@ async function stopRun() {
   }
   if (!badge && R.goalHit) badge = `הגעת ליעד של ${fmtGoal(R.goal)} ק״מ`;
   await saveRun(run);
+  console.info(`AL-HADERECH run saved dist=${run.dist} time=${run.time} points=${R.points.length}`);
   void wasPaused;
   resetRun();
   openDetail(run.id, { summary: true, badge });
@@ -1933,6 +1934,7 @@ function scheduleAuthPrompt() {
     if (cloud.user || R.status !== 'idle' || runStarting || LS.get('authAsked', false)) return;
     if (!$('#installBar').hidden) { setTimeout(scheduleAuthPrompt, 15000); return; }
     $('#authSheet').hidden = false;
+    console.info('AL-HADERECH auth sheet shown');
   }, 4000);
 }
 // מתחברים לענן רק אם כבר נכנסו בעבר, כדי לא להאט את הפתיחה של מי שלא משתמש בזה
