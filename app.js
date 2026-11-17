@@ -382,16 +382,36 @@ if (NATIVE) console.info(`AL-HADERECH native ok: RT=${!!RT} BG=${!!BG} SH=${!!SH
 const LIVE_ID = 4242;
 let trackOn = false, trackStarting = false, bgWatch = null, liveLast = 0, lastFixTs = 0, rtListeners = false;
 
+// לכל נקודה שהשירות קולט יש מספר רץ (seq). האפליקציה סופרת אותן: אם נקודה אחת התפספה (האפליקציה הייתה ברקע),
+// היא מבקשת מהשירות את כל מה שחסר, לפי הסדר, ורק אז ממשיכה. כך אף קטע לא נדלג.
+let syncTimer = null;
+let nextSeq = 0, syncing = false, syncAgain = false, catchingUp = false;
 function feedNative(loc) {
-  if (!loc || !loc.time || loc.time <= lastFixTs) return; // כל נקודה פעם אחת בלבד
-  lastFixTs = loc.time;
+  if (!loc || !loc.time) return;
+  if (loc.seq != null && loc.seq >= 0) {
+    if (loc.seq < nextSeq) return;                       // כבר טופלה
+    if (loc.seq > nextSeq && !catchingUp) { syncMissed(); return; } // התפספו נקודות: משלימים לפי הסדר
+    nextSeq = loc.seq + 1;
+  } else if (loc.time <= lastFixTs) return;              // בלי מספר (אפליקציה ישנה, או נקודה בזמן השהיה): לפי זמן
+  lastFixTs = Math.max(lastFixTs, loc.time);
   onPosition({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy, heading: loc.bearing, speed: loc.speed }, timestamp: loc.time });
   updateLive();
 }
 // נקודות שהשירות קלט כשהאפליקציה לא הספיקה לקבל אותן (למשל כשאנדרואיד השהה אותה)
 async function syncMissed() {
   if (!RT || !trackOn) return;
-  try { const r = await RT.getSince({ time: lastFixTs }); (r.points || []).forEach(feedNative); } catch (e) { /* */ }
+  if (syncing) { syncAgain = true; return; }
+  syncing = true;
+  try {
+    do {
+      syncAgain = false;
+      const r = await RT.getSince({ seq: nextSeq, time: lastFixTs });
+      catchingUp = true;
+      (r.points || []).forEach(feedNative);
+      catchingUp = false;
+    } while (syncAgain);
+  } catch (e) { catchingUp = false; }
+  syncing = false;
 }
 async function nativeTrackStart() {
   if (trackOn || trackStarting) return;
@@ -406,6 +426,7 @@ async function nativeTrackStart() {
       }
       await RT.start({ goal: (R.goal || LS.get('goalKm', 5)) * 1000, title: '0.00 ק״מ', text: 'הריצה התחילה' });
       trackOn = true;
+      if (!syncTimer) syncTimer = setInterval(() => { if (R.status === 'running') syncMissed(); }, 8000); // רשת ביטחון: אם הנקודה האחרונה התפספה
       askBatteryOnce();
     } else if (BG) {
       // גרסה ישנה של האפליקציה: התראה אחת קבועה בלבד. עדכון חי בה הקפיץ אותה מחדש כל פעם
@@ -479,6 +500,7 @@ function setGps(q, text) { $('#gpsChip').dataset.q = q; $('#gpsText').textConten
 
 function onPosition(pos) {
   const c = pos.coords, ts = pos.timestamp || Date.now();
+  curFixTs = ts;
   if (R.status === 'running' && !R.autoPaused) { const now = Date.now(); R.elapsed += (now - R.lastTick) / 1000; R.lastTick = now; }
   const acc = Math.round(c.accuracy);
   if (acc <= 10) setGps('good', `GPS מדויק, ±${acc} מ׳`);
@@ -524,8 +546,13 @@ function checkGoal() {
   vibrate([700, 150, 700, 150, 1000]);
   toast(`הגעת ליעד של ${fmtGoal(R.goal)} ק״מ. אפשר להמשיך לרוץ`, 7000);
 }
+let curFixTs = 0;
 function addPoint(p) {
-  R.points.push([+p[0].toFixed(6), +p[1].toFixed(6), +R.elapsed.toFixed(1), +R.dist.toFixed(1)]);
+  // נקודה שהושלמה מהשירות (נמדדה לפני כמה שניות): הזמן שלה הוא הזמן שבו נמדדה, לא הרגע שבו התקבלה
+  let el = R.elapsed;
+  const late = Date.now() - curFixTs;
+  if (curFixTs && late > 3000) el = Math.min(R.elapsed, Math.max(R.points.length ? R.points[R.points.length - 1][2] : 0, R.elapsed - late / 1000));
+  R.points.push([+p[0].toFixed(6), +p[1].toFixed(6), +el.toFixed(1), +R.dist.toFixed(1)]);
   updateCurPace();
   drawPoint(p, paceColor(R.curPace, targetPace() || S.pace));
 }
@@ -808,6 +835,7 @@ async function startRun(opts) {
     dist: 0, points: [], last: null, jumps: 0, steps: 0, stepTimes: [], splits: [], kmNext: 1000, lastSplitT: 0, curPace: NaN, segIdx: -1, done: false,
   });
   filter.reset();
+  nextSeq = 0; lastFixTs = 0; // ריצה חדשה: השירות מתחיל לספור נקודות מאפס
   clearTrack();
   setFollow(true);
   lockTabs(true);
@@ -823,6 +851,7 @@ function resumeRun() {
   if (NATIVE) { nativeTrackStart(); updateLive(true); }
 }
 async function stopRun() {
+  if (RT && trackOn) { try { await syncMissed(); } catch (e) { /* */ } } // לפני הסיכום: כל נקודה שהשירות קלט
   const wasPaused = R.status;
   R.status = 'paused';
   if (R.dist < 50) {
@@ -879,7 +908,7 @@ function downsample(points, minGap) {
 }
 function persistActive() {
   if (R.status === 'idle') return;
-  LS.set('activeRun', { R: Object.assign({}, R, { stepTimes: [], last: null, lastFixTs }), saved: Date.now() });
+  LS.set('activeRun', { R: Object.assign({}, R, { stepTimes: [], last: null, lastFixTs, nextSeq }), saved: Date.now() });
 }
 function restoreActive() {
   const a = LS.get('activeRun', null);
@@ -895,12 +924,18 @@ function restoreActive() {
     RT.status().then(async (st) => {
       if (!st.running) { toast('שחזרתי ריצה שלא הסתיימה. אפשר להמשיך או לסיים', 6000); return; }
       lastFixTs = a.R.lastFixTs || 0;
+      nextSeq = a.R.nextSeq || 0;
+      if (a.R.nextSeq == null) { // ריצה ששמורה מגרסה קודמת: מוצאים את המקום לפי הזמן
+        try {
+          const r = await RT.getSince({ time: lastFixTs });
+          nextSeq = r.points && r.points.length && r.points[0].seq != null ? r.points[0].seq : (st.points || 0);
+        } catch (e) { /* */ }
+      }
       if (a.R.status === 'running' && !st.paused) {
         R.elapsed += (Date.now() - a.saved) / 1000;
         R.status = 'running'; R.lastTick = Date.now(); R.lastMove = Date.now();
       }
       // קודם כל הנקודות שהשירות שמר בזמן שהאפליקציה הייתה סגורה, ורק אחר כך נקודות חדשות
-      try { const r = await RT.getSince({ time: lastFixTs }); (r.points || []).forEach(feedNative); } catch (e) { /* */ }
       await nativeTrackStart();
       await syncMissed();
       renderControls(); renderRun(); updateLive(true);
