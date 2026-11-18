@@ -1,5 +1,5 @@
 // שומר את החוברת במטמון כדי שתיפתח גם בלי אינטרנט. עדכונים מגיעים מהרשת כשיש חיבור.
-const VERSION = 'e1';
+const VERSION = 'e2';
 const CACHE = `english-${VERSION}`;
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 

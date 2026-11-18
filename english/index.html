@@ -541,10 +541,79 @@ const UNITS=[
   [`I ___ go to the gym on Saturday. (אף פעם)`,`never`,`don't never`,`not`,`no`,`never בלי don't.`],
   [`She ___ eats breakfast. (לפעמים)`,`sometimes`,`sometime`,`some time`,`sometimes is`,`sometimes לפני הפועל.`],
   [`How ___ you go to work?`,`do`,`does`,`are`,`is`,`עם you: do.`]
+ ]},
+{id:'u8',name:'שאלות עם מילות שאלה',en:'What / Where / When / Why / How',
+ lessons:[
+  {t:'מילות השאלה',h:`
+   <p>שאלה עם מילת שאלה מבקשת <b>מידע</b>, ולא רק כן או לא. מילת השאלה תמיד באה <b>ראשונה</b> במשפט.</p>
+   ${TBL(['מילה','משמעות','שואלת על'],[['what','מה','דבר, שם, מידע'],['who','מי','אדם'],['where','איפה','מקום'],['when','מתי','זמן'],['why','למה','סיבה'],['how','איך, מה שלום','דרך או מצב'],['which','איזה','בחירה מתוך כמה אפשרויות']])}
+   ${E('What is your name? My name is Tom.','מה שמך? קוראים לי טום.')}
+   ${E('Who is she? She is my sister.','מי היא? היא אחותי.')}
+   ${E('Where is the bathroom? It is over there.','איפה השירותים? שם.')}
+   ${E('When is the meeting? On Monday.','מתי הפגישה? ביום שני.')}
+   ${E('Why are you tired? Because I work a lot.','למה אתה עייף? כי אני עובד הרבה.')}
+   ${E('How are you? I am fine, thanks.','מה שלומך? אני בסדר, תודה.')}
+   ${E('Which one do you want? The blue one.','איזה אתה רוצה? את הכחול.')}
+   ${NOTE('על <b>why</b> עונים בדרך כלל עם <b>because</b> (כי): Why are you happy? <b>Because</b> it is the weekend.')}
+  `},
+  {t:'סדר המילים בשאלה',h:`
+   <p>יש שתי תבניות. הכל תלוי בשאלה אחת: יש במשפט <b>to be</b> או <b>פועל רגיל</b>?</p>
+   <h3>1. עם to be</h3>
+   <p>מילת שאלה + <b>am / is / are</b> + נושא.</p>
+   ${E('Where is your phone?','איפה הטלפון שלך?')}
+   ${E('How are your parents?','מה שלום ההורים שלך?')}
+   ${E('Why are they late?','למה הם מאחרים?')}
+   <h3>2. עם פועל רגיל</h3>
+   <p>מילת שאלה + <b>do / does</b> + נושא + פועל רגיל (בלי s).</p>
+   ${TBL(['מילת שאלה','do / does','נושא','פועל'],[['Where','do','you','live?'],['What','does','he','do?'],['When','does','the shop','open?'],['Why','do','they','work late?']])}
+   ${E('Where do you work?','איפה אתה עובד?')}
+   ${E('What does she like?','מה היא אוהבת?')}
+   ${E('When do they finish work?','מתי הם מסיימים לעבוד?')}
+   ${E('Why does he live in Haifa?','למה הוא גר בחיפה?')}
+   ${WARN('לא שוכחים את do / does: <b>Where do you live?</b> ✓, Where you live? ✗. ואחרי does הפועל בלי s: What does he <b>like</b>? ✓, What does he likes? ✗.')}
+  `},
+  {t:'שאלות של שתי מילים',h:`
+   <p>לפעמים מילת השאלה היא שתי מילים. כך שואלים על גיל, מחיר, כמות, זמן ומרחק.</p>
+   ${TBL(['שאלה','משמעות','דוגמה לתשובה'],[['How old...?','בן כמה','I am 30.'],['How much...?','כמה (כסף, כמות שלא סופרים)','It is 20 shekels.'],['How many...?','כמה (דברים שסופרים)','Two brothers.'],['How often...?','כמה פעמים, באיזו תדירות','Every day.'],['How long...?','כמה זמן','Two hours.'],['How far...?','כמה רחוק','Five kilometers.'],['What time...?','באיזו שעה','At eight.'],['What kind of...?','איזה סוג של','Italian food.']])}
+   ${E('How old are you?','בן כמה אתה?')}
+   ${E('How much is this?','כמה זה עולה?')}
+   ${E('How many children do you have?','כמה ילדים יש לך?')}
+   ${E('How often do you go to the gym?','כמה פעמים אתה הולך לחדר כושר?')}
+   ${E('How long is the flight?','כמה זמן הטיסה?')}
+   ${E('What kind of music do you like?','איזה סוג מוזיקה אתה אוהב?')}
+   ${NOTE('<b>much</b> לדברים שלא סופרים (money, water, time). <b>many</b> לדברים שסופרים (brothers, books, people), ואחריו רבים.')}
+   <h3>שאלות לשיחת היכרות</h3>
+   ${E('Where are you from?','מאיפה אתה?')}
+   ${E('What do you do?','במה אתה עובד?')}
+   ${E('What do you do on the weekend?','מה אתה עושה בסוף השבוע?')}
+   ${E('What is your favorite food?','מה האוכל האהוב עליך?')}
+  `}],
+ vocab:[['what','מה'],['who','מי'],['where','איפה'],['when','מתי'],['why','למה'],['how','איך'],['which','איזה (מתוך כמה)'],['because','כי, מפני ש'],['how much','כמה (כסף, כמות)'],['how many','כמה (דברים שסופרים)'],['how old','בן כמה'],['how often','כמה פעמים, באיזו תדירות'],['how long','כמה זמן'],['how far','כמה רחוק'],['what time','באיזו שעה'],['what kind of','איזה סוג של'],['question','שאלה'],['answer','תשובה'],['cost','לעלות (כסף)'],['favorite','אהוב, מועדף']],
+ bank:[
+  [`___ is your name?`,`What`,`Who`,`Where`,`How`,`על שם שואלים עם What.`],
+  [`___ do you live? I live in Jerusalem.`,`Where`,`When`,`What`,`Who`,`על מקום שואלים עם Where.`],
+  [`___ is your birthday? In May.`,`When`,`Where`,`Who`,`Why`,`על זמן שואלים עם When.`],
+  [`___ are you tired? Because I work a lot.`,`Why`,`How`,`What`,`Where`,`על סיבה שואלים עם Why, ועונים עם because.`],
+  [`___ is that man? He is my teacher.`,`Who`,`What`,`Where`,`Which`,`על אדם שואלים עם Who.`],
+  [`___ are you? I'm fine, thanks.`,`How`,`Who`,`What`,`Where`,`מה שלומך = How are you.`],
+  [`___ old are you?`,`How`,`What`,`Who`,`Which`,`על גיל: How old.`],
+  [`How ___ is this shirt? It's 50 shekels.`,`much`,`many`,`old`,`long`,`על מחיר: How much.`],
+  [`How ___ brothers do you have?`,`many`,`much`,`old`,`often`,`אחים סופרים, לכן many.`],
+  [`How ___ do you go to the gym? Every day.`,`often`,`long`,`much`,`many`,`על תדירות: How often.`],
+  [`What ___ does the shop open? At nine.`,`time`,`kind`,`long`,`old`,`באיזו שעה = What time.`],
+  [`Where ___ she work?`,`does`,`do`,`is`,`are`,`פועל רגיל עם she: does.`],
+  [`Where ___ your keys?`,`are`,`is`,`do`,`does`,`אין פועל רגיל, ו-keys ברבים: are.`],
+  [`איזה משפט נכון?`,`Where do you live?`,`Where you live?`,`Where does you live?`,`Where you do live?`,`מילת שאלה + do + נושא + פועל.`],
+  [`איזה משפט נכון?`,`What does he do?`,`What does he does?`,`What he does?`,`What do he do?`,`עם he: does, ואחריו פועל בלי s.`],
+  [`Why are you late? ___ the bus is late.`,`Because`,`So`,`Why`,`But`,`על why עונים עם because.`],
+  [`___ one do you want, the red or the blue?`,`Which`,`Who`,`Where`,`How`,`בחירה מתוך כמה אפשרויות: Which.`],
+  [`How ___ is the flight? Three hours.`,`long`,`far`,`much`,`many`,`על משך זמן: How long.`],
+  [`What ___ of music do you like?`,`kind`,`long`,`much`,`many`,`איזה סוג של = What kind of.`],
+  [`How ___ is the station? Two kilometers.`,`far`,`long`,`much`,`old`,`על מרחק: How far.`]
  ]}
 ];
 UNITS.forEach(u=>{u.bank=u.bank.map(Q)});
-const SOON=['שאלות עם What / Where / When / Why / How לעומק','יש לי / אין לי (have got), רצון ויכולת (can, want to)','עבר פשוט: מה עשיתי אתמול','עתיד: going to ו-will','מילות יחס: in, on, at, to, from','מסעדה ובית קפה, קניות, מלון ושדה תעופה, הגעה ותשלום'];
+const SOON=['יש לי / אין לי (have got), רצון ויכולת (can, want to)','עבר פשוט: מה עשיתי אתמול','עתיד: going to ו-will','מילות יחס: in, on, at, to, from','מסעדה ובית קפה, קניות, מלון ושדה תעופה, הגעה ותשלום'];
 
 /* ===== homework + summaries ===== */
 const F=(q,...a)=>({k:'f',q,a});
@@ -692,6 +761,27 @@ u7:[
   F(`He (work) ___ in Haifa.`,`works`),F(`He ___ tea. (לא אוהב)`,`does not like`),F(`What time ___ it?`,`is`),F(`___ she live here?`,`Does`),
   F(`אנחנו לא עייפים`,`We are not tired`),F(`היא לא גרה בחיפה`,`She does not live in Haifa`),
   W(`כתוב פסקה קצרה (5 משפטים) על עצמך: שם, מאיפה אתה, איפה אתה עובד, מה אתה אוהב ומה אתה אף פעם לא עושה.`,`My name is Tom. I am from Israel. I work in a factory. I like basketball. I never drink tea.`)]}
+],
+u8:[
+ {t:'מילות שאלה',d:`השלם את מילת השאלה לפי התשובה: what, who, where, when, why, how, which.`,i:[
+  F(`___ is your name? My name is Tom.`,`What`),F(`___ do you live? In Jerusalem.`,`Where`),F(`___ is the meeting? On Monday.`,`When`),
+  F(`___ are you hungry? Because I don't eat breakfast.`,`Why`),F(`___ is that woman? She is my sister.`,`Who`),F(`___ are you? I'm fine, thanks.`,`How`),
+  F(`___ bag is yours, the black or the red?`,`Which`),F(`___ time is it? It's five o'clock.`,`What`),F(`___ are you from? I'm from Israel.`,`Where`),
+  F(`___ is your birthday? In June.`,`When`),F(`___ is your teacher? Dan is my teacher.`,`Who`),F(`___ do you study English? Because I like it.`,`Why`)]},
+ {t:'שאלות של שתי מילים',d:`השלם מילה אחת: old, much, many, often, long, far, time, kind.`,i:[
+  F(`How ___ are you? I'm 30.`,`old`),F(`How ___ is it? 20 shekels.`,`much`),F(`How ___ children do they have? Two.`,`many`),
+  F(`How ___ do you eat pizza? Sometimes.`,`often`),F(`How ___ is the film? Two hours.`,`long`),F(`How ___ is the beach? Five kilometers.`,`far`),
+  F(`What ___ is the meeting? At ten.`,`time`),F(`What ___ of food do you like? Italian food.`,`kind`),F(`How ___ does it cost? Ten dollars.`,`much`),
+  F(`How ___ people are there? Three.`,`many`),
+  M(`איזה משפט נכון?`,`How much water do you drink?`,`How many water do you drink?`,`How much waters do you drink?`,`How many waters you drink?`),
+  M(`איך שואלים מישהו בן כמה הוא?`,`How old are you?`,`How many years are you?`,`What old are you?`,`How much old are you?`)]},
+ {t:'סדר מילים, תרגום ושיחה',d:`סדר מילים לשאלה, תרגם לאנגלית ומצא את הטעות. בסוף כתוב בעצמך.`,i:[
+  F(`do / where / you / work`,`Where do you work`),F(`is / your / when / birthday`,`When is your birthday`),F(`are / why / tired / you`,`Why are you tired`),
+  F(`does / what / he / do`,`What does he do`),F(`old / how / you / are`,`How old are you`),
+  F(`מאיפה אתה?`,`Where are you from`),F(`כמה זה עולה?`,`How much is it`,`How much is this`,`How much does it cost`,`How much does this cost`),
+  F(`באיזו שעה אתה מתעורר?`,`What time do you wake up`),F(`איזה סוג מוזיקה אתה אוהב?`,`What kind of music do you like`),
+  F(`Where you live?`,`Where do you live`),F(`What does she likes?`,`What does she like`),
+  W(`כתוב 4 שאלות שתשאל אדם חדש שאתה פוגש, ותשובה קצרה לכל אחת.`,`Where are you from? I'm from Israel. What do you do? I work in a big company. How old are you? I'm 30. What kind of music do you like? I like rock.`)]}
 ]};
 UNITS.forEach(u=>{u.hw=HW[u.id]});
 /* summary pages */
@@ -712,7 +802,9 @@ u5:`<ul><li>13-19 נגמרים ב-teen, 20-90 ב-ty. שים לב להטעמה.</
 u6:`<ul><li>הווה פשוט: הרגלים, שגרה ועובדות.</li><li>הפועל נשאר רגיל, ורק ב-<b>he / she / it</b> מוסיפים <b>s / es / ies</b>.</li><li>have הופך ל-<b>has</b>, go ל-<b>goes</b>, do ל-<b>does</b>.</li><li>לא משתמשים ב-to be לפני פועל רגיל.</li></ul>
  <div class="warnbox"><b>טעויות נפוצות:</b> ״He work״. ״I am work״. ״She have״. ״He studys״.</div>`,
 u7:`<ul><li>שלילה: <b>don't</b> (I, you, we, they) ו-<b>doesn't</b> (he, she, it) + פועל רגיל.</li><li>שאלה: <b>Do / Does</b> + כינוי + פועל רגיל.</li><li>אחרי does / doesn't הפועל <b>בלי s</b>.</li><li>תדירות: לפני פועל רגיל, אחרי to be.</li></ul>
- <div class="warnbox"><b>טעויות נפוצות:</b> ״Does he works?״. ״He don't like״. ״I don't never go״. ״He always is late״.</div>`};
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״Does he works?״. ״He don't like״. ״I don't never go״. ״He always is late״.</div>`,
+u8:`<ul><li>מילת השאלה באה ראשונה: what, who, where, when, why, how, which.</li><li>עם to be: מילת שאלה + <b>is / are</b> + נושא. <b>Where is the bank?</b></li><li>עם פועל רגיל: מילת שאלה + <b>do / does</b> + נושא + פועל רגיל. <b>Where do you live?</b></li><li>How old, how much (לא סופרים), how many (סופרים), how often, how long, how far. What time, what kind of.</li><li>על why עונים עם <b>because</b>.</li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״Where you live?״ (חסר do). ״What does he likes?״ (בלי s). ״How many money?״ (צריך much). ״Who is your name?״ (צריך What).</div>`};
 UNITS.forEach(u=>u.lessons.push({t:'סיכום ושגיאות נפוצות',h:SUM[u.id]}));
 /* ===== state ===== */
 const KEY='eng_progress_v1';

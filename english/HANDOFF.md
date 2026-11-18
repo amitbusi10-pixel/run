@@ -37,7 +37,7 @@
 ## 4. מצב נוכחי
 ### קבצים (`run/english/`)
 - `index.html`: כל האפליקציה (כ-80KB): CSS, נתוני היחידות, שיעורי הבית והמנוע.
-- `sw.js`: service worker. גרסה `VERSION = 'e1'`, מטמון `english-e1`. רשת קודם, ובלי רשת מהמטמון. שומר גם את הגופן Heebo מ-Google Fonts.
+- `sw.js`: service worker. גרסה `VERSION = 'e2'`, מטמון `english-e2`. רשת קודם, ובלי רשת מהמטמון. שומר גם את הגופן Heebo מ-Google Fonts.
 - `manifest.webmanifest`: השם "אנגלית מהבסיס", צבע `#1b3fa8`, רקע לבן.
 - `icon-192.png`, `icon-512.png`: ריבוע כחול עם "ABC".
 - `test/check.js` (בשורש הריפו) בודק גם את `english/`: תחביר `sw.js`, שהקבצים קיימים, ושה-manifest תקין.
@@ -55,7 +55,7 @@
 - **בדיקת כתיבה:** לא רגישה לאותיות גדולות ולפיסוק, ומקפים נחשבים רווח. קיצורים נפתחים לצורה המלאה (I'm = I am, doesn't = does not וכו'). תרגילים מסוג `S(...)` בודקים את הקיצור עצמו ולא נפתחים.
 - **הקראה:** `speechSynthesis`, `en-US`, קצב 0.85.
 
-### היחידות (7)
+### היחידות (8)
 1. כינויי גוף ושייכות (Pronouns)
 2. הפועל to be: חיוב (am / is / are)
 3. to be: שלילה, שאלות ומשפטי נימוס
@@ -63,9 +63,9 @@
 5. מספרים, ימים ושעות (כולל on / at / in)
 6. הווה פשוט: חיוב (כלל ה-s)
 7. הווה פשוט: שלילה, שאלות (do / does) ומילות תדירות
+8. שאלות עם מילות שאלה (What / Where / When / Why / How, how much / many / old / often / long / far, what time / kind of)
 
 ### "בדרך" (עדיין לא נבנה)
-- שאלות עם What / Where / When / Why / How לעומק
 - have got, can, want to
 - עבר פשוט
 - עתיד (going to, will)
