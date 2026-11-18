@@ -610,10 +610,75 @@ const UNITS=[
   [`How ___ is the flight? Three hours.`,`long`,`far`,`much`,`many`,`על משך זמן: How long.`],
   [`What ___ of music do you like?`,`kind`,`long`,`much`,`many`,`איזה סוג של = What kind of.`],
   [`How ___ is the station? Two kilometers.`,`far`,`long`,`much`,`old`,`על מרחק: How far.`]
+ ]},
+{id:'u9',name:'יש לי, אני יכול, אני רוצה',en:'have got / can / want to',
+ lessons:[
+  {t:'have got: יש לי',h:`
+   <p>ביחידה 6 למדת <b>I have a car</b> (יש לי מכונית). יש עוד דרך נפוצה מאוד להגיד את אותו הדבר: <b>have got</b>.</p>
+   ${TBL(['כינוי','חיוב','קיצור'],[['I / you / we / they','have got','\'ve got'],['he / she / it','has got','\'s got']])}
+   ${E('I have got a car.','יש לי מכונית.')}
+   ${E("I've got two brothers.",'יש לי שני אחים.')}
+   ${E("She's got a new phone.",'יש לה טלפון חדש.')}
+   <h3>שלילה ושאלה</h3>
+   ${E("I haven't got a car.",'אין לי מכונית.')}
+   ${E("He hasn't got time.",'אין לו זמן.')}
+   ${E('Have you got a pen? Yes, I have.','יש לך עט? כן.')}
+   ${E("Has she got a car? No, she hasn't.",'יש לה מכונית? לא.')}
+   ${WARN("כאן <b>she's got</b> = she <b>has</b> got, ולא she is. שלילה: haven't got / hasn't got, בלי don't.")}
+   ${NOTE('שתי הדרכים נכונות: <b>I have a car</b> ו-<b>I have got a car</b>. גם <b>Do you have a pen?</b> וגם <b>Have you got a pen?</b>')}
+  `},
+  {t:'can: יכול, יודע ל...',h:`
+   <p><b>can</b> אומר שאפשר, שמותר, או שאני יודע לעשות משהו. אחריו בא פועל רגיל.</p>
+   ${TBL(['כינוי','חיוב','שלילה'],[['I / you / he / she / it / we / they','can + פועל',"can't (cannot) + פועל"]])}
+   ${E('I can swim.','אני יודע לשחות.')}
+   ${E('She can speak English.','היא יודעת לדבר אנגלית.')}
+   ${E("He can't drive.",'הוא לא יודע לנהוג.')}
+   <h3>שאלות ובקשות</h3>
+   ${E('Can you swim? Yes, I can.','אתה יודע לשחות? כן.')}
+   ${E("Can he cook? No, he can't.",'הוא יודע לבשל? לא.')}
+   ${E('Can you help me?','אתה יכול לעזור לי?')}
+   ${E('Can I pay by credit card?','אפשר לשלם בכרטיס אשראי?')}
+   ${WARN("can זהה לכולם: בלי s ובלי to. <b>She can swim</b> ✓, She cans swim ✗, She can swims ✗, I can to swim ✗.")}
+  `},
+  {t:'want to: רוצה ל...',h:`
+   <p>ביחידה 6 למדת <b>I want water</b> (רוצה + דבר). כשרוצים <b>לעשות</b> משהו, מוסיפים <b>to</b> ואחריו פועל.</p>
+   ${TBL(['כינוי','חיוב','שלילה'],[['I / you / we / they','want to + פועל',"don't want to + פועל"],['he / she / it','wants to + פועל',"doesn't want to + פועל"]])}
+   ${E('I want to travel.','אני רוצה לטייל.')}
+   ${E('She wants to learn English.','היא רוצה ללמוד אנגלית.')}
+   ${E("We don't want to go home.",'אנחנו לא רוצים ללכת הביתה.')}
+   ${E("He doesn't want to work today.",'הוא לא רוצה לעבוד היום.')}
+   <h3>שאלות</h3>
+   ${E('Do you want to dance?','אתה רוצה לרקוד?')}
+   ${E('Does she want to come?','היא רוצה לבוא?')}
+   ${E('What do you want to do?','מה אתה רוצה לעשות?')}
+   ${WARN("לא שוכחים את to: <b>I want to go</b> ✓, I want go ✗. ואחרי doesn't בלי s: She doesn't <b>want</b> to go ✓.")}
+  `}],
+ vocab:[['can','יכול, יודע ל...'],["can't",'לא יכול'],['want to','רוצה ל...'],['have got','יש ל...'],['swim','לשחות'],['help','לעזור'],['pay','לשלם'],['sing','לשיר'],['dance','לרקוד'],['travel','לטייל'],['learn','ללמוד (משהו חדש)'],['try','לנסות'],['come','לבוא'],['ride a bike','לרכוב על אופניים'],['ticket','כרטיס'],['credit card','כרטיס אשראי'],['problem','בעיה'],['minute','דקה'],['together','ביחד'],['again','שוב']],
+ bank:[
+  [`I ___ got a new phone.`,`have`,`has`,`am`,`do`,`עם I: have got.`],
+  [`She ___ got two brothers.`,`has`,`have`,`is`,`does`,`עם she: has got.`],
+  [`___ you got a pen?`,`Have`,`Has`,`Are`,`Do`,`שאלה: Have you got...?`],
+  [`Has he got a car? No, he ___.`,`hasn't`,`haven't`,`isn't`,`doesn't`,`עם he: hasn't.`],
+  [`They ___ got a dog. (שלילה)`,`haven't`,`hasn't`,`aren't`,`don't`,`עם they: haven't got.`],
+  [`In "She's got a cat", she's = ___`,`she has`,`she is`,`she was`,`she does`,`לפני got, 's = has.`],
+  [`I ___ swim. (יודע)`,`can`,`cans`,`can to`,`am can`,`can + פועל, בלי to.`],
+  [`She ___ speak French.`,`can`,`cans`,`can to`,`is can`,`can זהה לכולם, בלי s.`],
+  [`___ you help me?`,`Can`,`Cans`,`Is`,`Am`,`בקשה: Can you...?`],
+  [`Can you drive? Yes, I ___.`,`can`,`do`,`am`,`drive`,`עונים עם can.`],
+  [`He can't ___ a car.`,`drive`,`drives`,`to drive`,`driving`,`אחרי can't פועל רגיל.`],
+  [`איזה משפט נכון?`,`She can cook.`,`She cans cook.`,`She can cooks.`,`She can to cook.`,`can + פועל רגיל, בלי s ובלי to.`],
+  [`I want ___ home.`,`to go`,`go`,`going`,`goes`,`want to + פועל.`],
+  [`She ___ to travel.`,`wants`,`want`,`is want`,`wanting`,`עם she: wants.`],
+  [`He doesn't ___ to work today.`,`want`,`wants`,`wanting`,`to want`,`אחרי doesn't בלי s.`],
+  [`___ you want to eat?`,`Do`,`Does`,`Are`,`Can`,`עם you: Do.`],
+  [`___ she want to come?`,`Does`,`Do`,`Is`,`Has`,`עם she: Does.`],
+  [`איזה משפט נכון?`,`I want to learn English.`,`I want learn English.`,`I want to learning English.`,`I wants to learn English.`,`want to + פועל רגיל.`],
+  [`Do you want to dance? No, I ___.`,`don't`,`doesn't`,`am not`,`not`,`שאלה עם Do, תשובה עם don't.`],
+  [`___ I pay by credit card?`,`Can`,`Am`,`Cans`,`Have`,`לבקש רשות: Can I...?`]
  ]}
 ];
 UNITS.forEach(u=>{u.bank=u.bank.map(Q)});
-const SOON=['יש לי / אין לי (have got), רצון ויכולת (can, want to)','עבר פשוט: מה עשיתי אתמול','עתיד: going to ו-will','מילות יחס: in, on, at, to, from','מסעדה ובית קפה, קניות, מלון ושדה תעופה, הגעה ותשלום'];
+const SOON=['עבר פשוט: מה עשיתי אתמול','עתיד: going to ו-will','מילות יחס: in, on, at, to, from','מסעדה ובית קפה, קניות, מלון ושדה תעופה, הגעה ותשלום'];
 
 /* ===== homework + summaries ===== */
 const F=(q,...a)=>({k:'f',q,a});
@@ -782,6 +847,28 @@ u8:[
   F(`באיזו שעה אתה מתעורר?`,`What time do you wake up`),F(`איזה סוג מוזיקה אתה אוהב?`,`What kind of music do you like`),
   F(`Where you live?`,`Where do you live`),F(`What does she likes?`,`What does she like`),
   W(`כתוב 4 שאלות שתשאל אדם חדש שאתה פוגש, ותשובה קצרה לכל אחת.`,`Where are you from? I'm from Israel. What do you do? I work in a big company. How old are you? I'm 30. What kind of music do you like? I like rock.`)]}
+],
+u9:[
+ {t:'have got',d:`השלם have או has, ענה תשובות קצרות, והפוך לשלילה או לשאלה.`,i:[
+  F(`I ___ got a car.`,`have`),F(`She ___ got a new phone.`,`has`),F(`We ___ got two children.`,`have`),F(`My brother ___ got a dog.`,`has`),
+  F(`They ___ got a big house.`,`have`),F(`___ you got a pen?`,`Have`),F(`___ he got a car?`,`Has`),
+  F(`Have you got a car? Yes, I ___.`,`have`),F(`Has she got a brother? No, she ___.`,`has not`),
+  F(`I have got a bike. (שלילה)`,`I have not got a bike`),F(`She has got a car. (שלילה)`,`She has not got a car`),
+  F(`You have got a minute. (שאלה)`,`Have you got a minute`)]},
+ {t:'can',d:`השלם, תרגם ומצא את הטעות. can't אפשר לכתוב גם cannot.`,i:[
+  F(`I ___ swim. (יודע)`,`can`),F(`She ___ drive. (לא יודעת)`,`cannot`,`can not`),F(`___ you help me?`,`Can`),
+  F(`Can you cook? Yes, I ___.`,`can`),F(`Can he sing? No, he ___.`,`cannot`,`can not`),
+  F(`אני יודע לנהוג`,`I can drive`),F(`היא לא יכולה לבוא היום`,`She cannot come today`,`She can not come today`),
+  F(`אתה יכול לעזור לי?`,`Can you help me`),F(`אפשר לשלם בכרטיס אשראי?`,`Can I pay by credit card`,`Can I pay with a credit card`,`Can I pay with credit card`),
+  F(`She cans swim.`,`She can swim`),F(`I can to drive.`,`I can drive`),
+  M(`איזה משפט נכון?`,`He can speak English.`,`He can speaks English.`,`He cans speak English.`,`He can to speak English.`)]},
+ {t:'want to וכתיבה',d:`השלם, סדר מילים ותרגם. בסוף כתוב על עצמך.`,i:[
+  F(`I want ___ go home.`,`to`),F(`She (want) ___ to travel.`,`wants`),F(`He doesn't ___ to work today.`,`want`),
+  F(`___ you want to eat?`,`Do`),F(`___ she want to come?`,`Does`),F(`Do you want to dance? No, I ___.`,`do not`),
+  F(`to / want / I / learn / English`,`I want to learn English`),F(`want / do / you / what / to / do`,`What do you want to do`),
+  F(`אני רוצה לקנות כרטיס`,`I want to buy a ticket`),F(`היא לא רוצה לבשל`,`She does not want to cook`),
+  F(`יש לך דקה?`,`Have you got a minute`,`Do you have a minute`),
+  W(`כתוב 4 משפטים על עצמך: מה יש לך (have got), מה אתה יודע לעשות (can), מה אתה לא יודע לעשות (can't) ומה אתה רוצה לעשות (want to).`,`I have got a car. I can drive. I can't sing. I want to travel.`)]}
 ]};
 UNITS.forEach(u=>{u.hw=HW[u.id]});
 /* summary pages */
@@ -804,7 +891,9 @@ u6:`<ul><li>הווה פשוט: הרגלים, שגרה ועובדות.</li><li>ה
 u7:`<ul><li>שלילה: <b>don't</b> (I, you, we, they) ו-<b>doesn't</b> (he, she, it) + פועל רגיל.</li><li>שאלה: <b>Do / Does</b> + כינוי + פועל רגיל.</li><li>אחרי does / doesn't הפועל <b>בלי s</b>.</li><li>תדירות: לפני פועל רגיל, אחרי to be.</li></ul>
  <div class="warnbox"><b>טעויות נפוצות:</b> ״Does he works?״. ״He don't like״. ״I don't never go״. ״He always is late״.</div>`,
 u8:`<ul><li>מילת השאלה באה ראשונה: what, who, where, when, why, how, which.</li><li>עם to be: מילת שאלה + <b>is / are</b> + נושא. <b>Where is the bank?</b></li><li>עם פועל רגיל: מילת שאלה + <b>do / does</b> + נושא + פועל רגיל. <b>Where do you live?</b></li><li>How old, how much (לא סופרים), how many (סופרים), how often, how long, how far. What time, what kind of.</li><li>על why עונים עם <b>because</b>.</li></ul>
- <div class="warnbox"><b>טעויות נפוצות:</b> ״Where you live?״ (חסר do). ״What does he likes?״ (בלי s). ״How many money?״ (צריך much). ״Who is your name?״ (צריך What).</div>`};
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״Where you live?״ (חסר do). ״What does he likes?״ (בלי s). ״How many money?״ (צריך much). ״Who is your name?״ (צריך What).</div>`,
+u9:`<ul><li><b>have got</b> = יש לי. I / you / we / they <b>have got</b>, he / she / it <b>has got</b>. שלילה: haven't got / hasn't got. שאלה: <b>Have you got...?</b></li><li><b>can</b> + פועל רגיל: אותו דבר לכולם. שלילה: can't. שאלה: <b>Can you...?</b> בקשה: <b>Can I...?</b></li><li><b>want to</b> + פועל: I want to, she <b>wants</b> to. שלילה: don't / doesn't want to. שאלה: <b>Do you want to...?</b></li></ul>
+ <div class="warnbox"><b>טעויות נפוצות:</b> ״She cans swim״. ״I can to drive״. ״I want go״. ״I don't have got״ (צריך haven't got). ״She doesn't wants to״.</div>`};
 UNITS.forEach(u=>u.lessons.push({t:'סיכום ושגיאות נפוצות',h:SUM[u.id]}));
 /* ===== state ===== */
 const KEY='eng_progress_v1';
@@ -819,7 +908,7 @@ const app=document.getElementById('app');
 const NAMES={lesson:'הסבר',vocab:'אוצר מילים',vq:'בחינת מילים',practice:'תרגול',hw:'שיעורי בית',test:'מבחן סיום'};
 
 /* answer checking */
-const CON={"i'm":'i am',"you're":'you are',"he's":'he is',"she's":'she is',"it's":'it is',"we're":'we are',"they're":'they are',"isn't":'is not',"aren't":'are not',"don't":'do not',"doesn't":'does not',"what's":'what is',"where's":'where is',"who's":'who is',"there's":'there is',"that's":'that is',"how's":'how is'};
+const CON={"i'm":'i am',"you're":'you are',"he's":'he is',"she's":'she is',"it's":'it is',"we're":'we are',"they're":'they are',"isn't":'is not',"aren't":'are not',"don't":'do not',"doesn't":'does not',"what's":'what is',"where's":'where is',"who's":'who is',"there's":'there is',"that's":'that is',"how's":'how is',"i've":'i have',"you've":'you have',"we've":'we have',"they've":'they have',"haven't":'have not',"hasn't":'has not',"can't":'cannot'};
 function norm(s,strict){
   s=String(s||'').toLowerCase().replace(/[’‘`´]/g,"'").replace(/[-–]/g,' ').replace(/[.,!?;:"]/g,' ').replace(/\s+/g,' ').trim();
   if(!strict)s=s.split(' ').map(w=>CON[w]||w).join(' ');
