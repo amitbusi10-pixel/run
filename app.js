@@ -501,7 +501,11 @@ function setGps(q, text) { $('#gpsChip').dataset.q = q; $('#gpsText').textConten
 function onPosition(pos) {
   const c = pos.coords, ts = pos.timestamp || Date.now();
   curFixTs = ts;
-  if (R.status === 'running' && !R.autoPaused) { const now = Date.now(); R.elapsed += (now - R.lastTick) / 1000; R.lastTick = now; }
+  if (R.status === 'running' && !R.autoPaused) {
+    const now = Date.now();
+    if (now - R.lastTick > 5000) R.lastMove = now; // חזרה מהקפאה: לא „עצירה“
+    R.elapsed += (now - R.lastTick) / 1000; R.lastTick = now;
+  }
   const acc = Math.round(c.accuracy);
   if (acc <= 10) setGps('good', `GPS מדויק, ±${acc} מ׳`);
   else if (acc <= 25) setGps('ok', `GPS בינוני, ±${acc} מ׳`);
@@ -515,6 +519,15 @@ function onPosition(pos) {
   }
   if (acc > 30) return; // קריאה לא מדויקת — מדלגים
   if (R.last && ts - R.last.ts > 10000) filter.reset(); // אחרי הפסקה ארוכה מתחילים את הסינון מחדש
+  // קפיצה לא הגיונית (מעל 32 קמ״ש) נבדקת לפני המסנן, כדי שקריאה שגויה אחת לא תעקם גם את הנקודות שאחריה
+  if (R.last) {
+    const dtr = (ts - R.last.ts) / 1000;
+    if (dtr > 0 && hav(R.last.p, raw) / dtr > 9) {
+      if (++R.jumps > 5) { filter.reset(); const p0 = filter.process(c.latitude, c.longitude, acc, ts); R.last = { p: p0, ts }; R.jumps = 0; moveMe(p0, acc); }
+      return;
+    }
+  }
+  R.jumps = 0;
   const p = filter.process(c.latitude, c.longitude, acc, ts);
   moveMe(p, acc);
   if (c.heading != null && c.speed > 0.6) setHeading(c.heading);
@@ -522,11 +535,6 @@ function onPosition(pos) {
   if (!R.last) { R.last = { p, ts }; addPoint(p); return; }
   const dd = hav(R.last.p, p), dt = (ts - R.last.ts) / 1000;
   if (dd < 4) return; // רעש במקום
-  if (dt > 0 && dd / dt > 9) { // קפיצה לא הגיונית (מעל 32 קמ״ש)
-    if (++R.jumps > 5) { R.last = { p, ts }; R.jumps = 0; }
-    return;
-  }
-  R.jumps = 0;
   // האפליקציה לא הייתה פתוחה: משלימים את הקטע החסר בקו ישר
   if (dt > 15) { R.bridged = (R.bridged || 0) + dd; toast(`השלמתי ${Math.round(dd)} מ׳ מהזמן שהאפליקציה לא הייתה פתוחה`, 4500); }
   if (heading == null || !(c.heading != null && c.speed > 0.6)) setHeading(bearing(R.last.p, p));
@@ -618,9 +626,12 @@ function cadence() {
 /* ---------------- שעון ---------------- */
 function tick() {
   const now = Date.now();
+  // הדף היה מוקפא (ברקע / מסך כבוי) ועכשיו חזר: נקודות ה־GPS מהזמן הזה עוד בדרך, אז לא מסיקים „עצירה“ ולא מוחקים זמן
+  const frozen = now - R.lastTick > 5000;
+  if (frozen && R.status === 'running') R.lastMove = now;
   if (R.status === 'running' && !R.autoPaused) {
     R.elapsed += (now - R.lastTick) / 1000;
-    if (S.auto && (NATIVE || !document.hidden) && R.dist > 0 && now - R.lastMove > 12000) {
+    if (S.auto && !frozen && (NATIVE || !document.hidden) && R.dist > 0 && now - R.lastMove > 12000) {
       R.autoPaused = true; R.elapsed = R.elapsedAtMove;
       toast('השהיה אוטומטית: זיהיתי עצירה');
     }
@@ -1080,6 +1091,7 @@ function drawRunOnMap(m, layer, r) {
 function openDetail(id, opts = {}) {
   const r = runs.find((x) => x.id === id);
   if (!r) return;
+  if (!Array.isArray(r.points)) r.points = []; // ריצה ישנה או מיובאת בלי נקודות
   detailId = id;
   detailFrom = opts.summary ? 'run' : 'history';
   show('detail', { push: true });
