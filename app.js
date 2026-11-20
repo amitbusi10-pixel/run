@@ -1986,6 +1986,7 @@ document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => sho
 (async function init() {
   initMap();
   await loadData();
+  console.info(`AL-HADERECH data runs=${runs.length} routes=${routes.length}`); // הבוט בודק שעדכון לא מוחק נתונים
   window.addEventListener('devicemotion', onMotion);
   startGps();
   restoreActive();
