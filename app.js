@@ -520,13 +520,15 @@ function onPosition(pos) {
   if (acc > 30) return; // קריאה לא מדויקת — מדלגים
   if (R.last && ts - R.last.ts > 10000) filter.reset(); // אחרי הפסקה ארוכה מתחילים את הסינון מחדש
   // קפיצה לא הגיונית (מעל 32 קמ״ש) נבדקת לפני המסנן, כדי שקריאה שגויה אחת לא תעקם גם את הנקודות שאחריה
-  if (R.last) {
-    const dtr = (ts - R.last.ts) / 1000;
-    if (dtr > 0 && hav(R.last.p, raw) / dtr > 9) {
-      if (++R.jumps > 5) { filter.reset(); const p0 = filter.process(c.latitude, c.longitude, acc, ts); R.last = { p: p0, ts }; R.jumps = 0; moveMe(p0, acc); }
+  // משווים קריאה גולמית לקריאה הגולמית הקודמת, עם מרווח לשגיאה של שתיהן: רק מה שבאמת לא אפשרי נפסל
+  if (R.last && R.lastRaw) {
+    const dtr = Math.max(0.5, (ts - R.lastRaw.ts) / 1000);
+    if (hav(R.lastRaw.p, raw) > 9 * dtr + R.lastRaw.acc + acc + 5) {
+      if (++R.jumps > 5) { filter.reset(); const p0 = filter.process(c.latitude, c.longitude, acc, ts); R.last = { p: p0, ts }; R.lastRaw = { p: raw, ts, acc }; R.jumps = 0; moveMe(p0, acc); }
       return;
     }
   }
+  R.lastRaw = { p: raw, ts, acc };
   R.jumps = 0;
   const p = filter.process(c.latitude, c.longitude, acc, ts);
   moveMe(p, acc);
